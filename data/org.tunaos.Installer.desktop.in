@@ -4,5 +4,5 @@ Exec=tuna-installer
 Icon=org.tunaos.Installer
 Terminal=false
 Type=Application
-Categories=GTK;
+Categories=GTK;System;Settings;
 StartupNotify=true
