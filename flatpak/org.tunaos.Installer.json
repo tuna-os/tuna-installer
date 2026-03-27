@@ -65,7 +65,7 @@
       "name": "fisherman",
       "buildsystem": "simple",
       "build-commands": [
-        "go build -o /app/bin/fisherman ./cmd/fisherman"
+        "go build -C fisherman -o /app/bin/fisherman ./cmd/fisherman"
       ],
       "sources": [
         {
