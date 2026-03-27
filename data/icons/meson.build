@@ -1,4 +1,4 @@
-application_id = 'org.vanillaos.Installer'
+application_id = 'org.tunaos.Installer'
 
 
 scalable_dir = join_paths('hicolor', 'scalable', 'apps')
