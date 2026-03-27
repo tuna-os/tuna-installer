@@ -11,7 +11,9 @@ i18n = import('i18n')
 gnome = import('gnome')
 
 subdir('data')
-subdir('fisherman')
+if get_option('build-fisherman')
+  subdir('fisherman')
+endif
 subdir('tuna_installer')
 subdir('po')
 

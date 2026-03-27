@@ -78,6 +78,9 @@
     {
       "name": "tuna-installer",
       "buildsystem": "meson",
+      "config-opts": [
+        "-Dbuild-fisherman=false"
+      ],
       "sources": [
         {
           "type": "dir",

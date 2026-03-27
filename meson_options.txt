@@ -1,0 +1,2 @@
+option('build-fisherman', type: 'boolean', value: true,
+  description: 'Build the fisherman Go backend (disable when fisherman is built separately, e.g. in Flatpak)')
