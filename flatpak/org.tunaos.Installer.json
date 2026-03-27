@@ -18,8 +18,8 @@
   "build-options": {
     "env": {
       "PATH": "/app/go/bin:/usr/bin:/bin",
-      "GOPATH": "/run/build/fisherman/gopath",
-      "GOCACHE": "/run/build/fisherman/gocache",
+      "GOPATH": "/run/build/go-path",
+      "GOCACHE": "/run/build/go-cache",
       "GONOSUMDB": "*",
       "GOFLAGS": "",
       "GOPROXY": "off"
@@ -64,14 +64,13 @@
     {
       "name": "fisherman",
       "buildsystem": "simple",
-      "subdir": "fisherman",
       "build-commands": [
         "go build -o /app/bin/fisherman ./cmd/fisherman"
       ],
       "sources": [
         {
           "type": "dir",
-          "path": ".."
+          "path": "../fisherman"
         }
       ]
     },
