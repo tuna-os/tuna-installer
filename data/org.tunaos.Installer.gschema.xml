@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="tuna-installer">
+<schema id="org.tunaos.Installer" path="/org/tunaos/Installer/">
+</schema>
+</schemalist>
