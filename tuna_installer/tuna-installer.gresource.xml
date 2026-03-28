@@ -47,6 +47,14 @@
     <file>assets/containerized.svg</file>
     <file>assets/unsupported.svg</file>
     <file>../data/images.json</file>
+    <file preprocess="xml-stripblanks">../data/images/bluefin.svg</file>
+    <file preprocess="xml-stripblanks">../data/images/aurora.svg</file>
+    <file preprocess="xml-stripblanks">../data/images/bazzite.svg</file>
+    <file preprocess="xml-stripblanks">../data/images/tunaos.svg</file>
+    <file preprocess="xml-stripblanks">../data/images/bonito.svg</file>
+    <file preprocess="xml-stripblanks">../data/images/skipjack.svg</file>
+    <file preprocess="xml-stripblanks">../data/images/albacore.svg</file>
+    <file preprocess="xml-stripblanks">../data/images/yellowfin.svg</file>
   </gresource>
   <gresource prefix="/org/tunaos/Installer/icons/scalable/actions/">
     <file preprocess="xml-stripblanks">../data/icons/hicolor/symbolic/actions/background-app-ghost-symbolic.svg</file>

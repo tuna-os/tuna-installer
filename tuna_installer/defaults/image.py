@@ -90,7 +90,33 @@ _DEFAULT_IMAGE = _MANIFEST["default_image"]
 _FALLBACK_FLATPAKS = _MANIFEST["fallback_flatpaks"]
 
 
-# ── Widget ────────────────────────────────────────────────────────────────────
+# ── Icon helpers ──────────────────────────────────────────────────────────────
+
+def _make_icon(icon_spec: str, size: int = 32) -> "Gtk.Image | None":
+    """Return a GtkImage for an icon spec, or None if blank/unresolvable.
+
+    Supported formats:
+      resource:///org/tunaos/Installer/images/foo.svg  — bundled GResource
+      /absolute/path/to/icon.svg                       — filesystem (distro override)
+      icon-name-symbolic                               — XDG icon theme name
+    """
+    if not icon_spec:
+        return None
+    img = Gtk.Image()
+    img.set_pixel_size(size)
+    try:
+        if icon_spec.startswith("resource://"):
+            img.set_from_resource(icon_spec[len("resource://"):])
+        elif icon_spec.startswith("/"):
+            img.set_from_file(icon_spec)
+        else:
+            img.set_from_icon_name(icon_spec)
+        return img
+    except Exception as e:
+        logger.warning(f"Could not load icon {icon_spec!r}: {e}")
+        return None
+
+
 
 @Gtk.Template(resource_path="/org/tunaos/Installer/gtk/default-image.ui")
 class VanillaDefaultImage(Adw.Bin):
@@ -113,8 +139,9 @@ class VanillaDefaultImage(Adw.Bin):
 
         self.__selected_imgref = _DEFAULT_IMAGE
         self.__selected_flatpaks = None  # per-image flatpak list (None = use fallback)
+        self.__selected_icon = None      # icon spec for selected image (str or None)
         self.__all_expanders = []   # every ExpanderRow widget
-        self.__leaf_rows = []       # [(row, check, imgref, flatpaks, search_str, [ancestor_exps])]
+        self.__leaf_rows = []       # [(row, check, imgref, flatpaks, icon, search_str, [ancestor_exps])]
 
         # Hidden anchor for the radio CheckButton group.
         self.__radio_anchor = Gtk.CheckButton()
@@ -150,19 +177,30 @@ class VanillaDefaultImage(Adw.Bin):
                     img.get("description", ""), "", [exp])
             self.list_images.append(exp)
 
-    def __build_node(self, parent, node, ancestors, search_ctx, flatpaks_ctx=None):
+    def __build_node(self, parent, node, ancestors, search_ctx, flatpaks_ctx=None, icon_ctx=None):
         """Recursively build ExpanderRow groups and ActionRow leaves."""
-        # Inherit flatpaks from nearest ancestor that defines them.
+        # Inherit flatpaks and icon from nearest ancestor that defines them.
         node_flatpaks = node.get("flatpaks", flatpaks_ctx)
+        node_icon = node.get("icon", icon_ctx)
+
         if "imgref" in node:
             self.__add_leaf(parent, node["name"], node["imgref"],
                             node.get("desc", ""), search_ctx, ancestors,
-                            node_flatpaks)
+                            node_flatpaks, node_icon)
             return
 
         exp = Adw.ExpanderRow(title=node["name"])
         if "subtitle" in node:
             exp.set_subtitle(node["subtitle"])
+
+        # Group icon — only shown if the node explicitly defines one (not inherited).
+        icon_spec = node.get("icon")
+        if icon_spec:
+            img = _make_icon(icon_spec, size=32)
+            if img:
+                img.add_css_class("icon-dropshadow")
+                exp.add_prefix(img)
+
         self.__all_expanders.append(exp)
 
         child_ctx = search_ctx + " " + node["name"]
@@ -171,7 +209,7 @@ class VanillaDefaultImage(Adw.Bin):
         child_ancestors = ancestors + [exp]
 
         for child in node.get("children", []):
-            self.__build_node(exp, child, child_ancestors, child_ctx, node_flatpaks)
+            self.__build_node(exp, child, child_ancestors, child_ctx, node_flatpaks, node_icon)
 
         if parent is self.list_images:
             parent.append(exp)
@@ -179,7 +217,7 @@ class VanillaDefaultImage(Adw.Bin):
             parent.add_row(exp)
 
     def __add_leaf(self, parent, name, imgref, desc, search_ctx, ancestors,
-                   flatpaks=None):
+                   flatpaks=None, icon=None):
         search_str = f"{search_ctx} {name} {desc} {imgref}".lower()
 
         row = Adw.ActionRow(title=name, subtitle=imgref)
@@ -191,13 +229,19 @@ class VanillaDefaultImage(Adw.Bin):
         check.set_group(self.__radio_anchor)
         row.add_prefix(check)
         row.set_activatable_widget(check)
-        check.connect("toggled", self.__on_check_toggled, imgref, flatpaks)
+        check.connect("toggled", self.__on_check_toggled, imgref, flatpaks, icon)
+
+        # Leaf icon — only for nodes that explicitly define one (e.g. TunaOS variants).
+        if icon:
+            img = _make_icon(icon, size=24)
+            if img:
+                row.add_suffix(img)
 
         parent.add_row(row)
-        self.__leaf_rows.append((row, check, imgref, flatpaks, search_str, list(ancestors)))
+        self.__leaf_rows.append((row, check, imgref, flatpaks, icon, search_str, list(ancestors)))
 
     def __select_default(self):
-        for _row, check, imgref, _flatpaks, _search, ancestors in self.__leaf_rows:
+        for _row, check, imgref, _flatpaks, _icon, _search, ancestors in self.__leaf_rows:
             if imgref == _DEFAULT_IMAGE:
                 check.set_active(True)
                 for exp in ancestors:
@@ -208,10 +252,11 @@ class VanillaDefaultImage(Adw.Bin):
 
     # ── Selection handlers ────────────────────────────────────────────────────
 
-    def __on_check_toggled(self, check, imgref, flatpaks):
+    def __on_check_toggled(self, check, imgref, flatpaks, icon):
         if check.get_active():
             self.__selected_imgref = imgref
             self.__selected_flatpaks = flatpaks
+            self.__selected_icon = icon
             logger.info(f"Image selected: {imgref}")
             if self.row_custom.get_expanded():
                 self.row_custom.set_expanded(False)
@@ -221,6 +266,7 @@ class VanillaDefaultImage(Adw.Bin):
         if expander.get_expanded():
             self.__radio_anchor.set_active(True)
             self.__selected_imgref = None
+            self.__selected_icon = None
         self.__update_btn_next()
 
     def __on_url_changed(self, entry):
@@ -241,14 +287,14 @@ class VanillaDefaultImage(Adw.Bin):
             for exp in self.__all_expanders:
                 exp.set_visible(True)
                 exp.set_expanded(False)
-            for row, _, _, _, _, _ in self.__leaf_rows:
+            for row, _, _, _, _, _, _ in self.__leaf_rows:
                 row.set_visible(True)
             self.__expand_default_path()
             return
 
         # Determine which leaves match and which expanders are needed.
         visible_expanders = set()
-        for row, _, _, _flatpaks, search_str, ancestors in self.__leaf_rows:
+        for row, _, _, _flatpaks, _icon, search_str, ancestors in self.__leaf_rows:
             if query in search_str:
                 row.set_visible(True)
                 for exp in ancestors:
@@ -264,7 +310,7 @@ class VanillaDefaultImage(Adw.Bin):
                 exp.set_visible(False)
 
     def __expand_default_path(self):
-        for _, _, imgref, _, _, ancestors in self.__leaf_rows:
+        for _, _, imgref, _, _, _, ancestors in self.__leaf_rows:
             if imgref == _DEFAULT_IMAGE:
                 for exp in ancestors:
                     exp.set_expanded(True)
@@ -293,9 +339,11 @@ class VanillaDefaultImage(Adw.Bin):
             return {
                 "custom_image": self.image_url_entry.get_text().strip(),
                 "flatpaks": _FALLBACK_FLATPAKS,
+                "icon": None,
             }
         return {
             "selected_image": self.__selected_imgref,
             "flatpaks": flatpaks,
+            "icon": self.__selected_icon,
         }
 

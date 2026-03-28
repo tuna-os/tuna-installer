@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="12" fill="#B71C1C"/>
+  <!-- Bazzite controller shape -->
+  <rect x="14" y="22" width="36" height="20" rx="10" fill="#EF5350"/>
+  <circle cx="42" cy="28" r="3" fill="#B71C1C"/>
+  <circle cx="48" cy="34" r="3" fill="#B71C1C"/>
+  <circle cx="36" cy="34" r="3" fill="#B71C1C"/>
+  <rect x="28" y="28" width="8" height="8" rx="1" fill="#B71C1C"/>
+  <rect x="20" y="29" width="3" height="6" rx="1" fill="#B71C1C"/>
+  <rect x="18" y="31" width="7" height="3" rx="1" fill="#B71C1C"/>
+</svg>

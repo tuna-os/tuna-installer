@@ -54,7 +54,8 @@
               "imgref": "ghcr.io/tuna-os/albacore:niri",
               "desc": "Niri scrolling Wayland compositor"
             }
-          ]
+          ],
+          "icon": "resource:///org/tunaos/Installer/images/albacore.svg"
         },
         {
           "name": "Yellowfin",
@@ -100,7 +101,8 @@
               "imgref": "ghcr.io/tuna-os/yellowfin:niri",
               "desc": "Niri scrolling Wayland compositor"
             }
-          ]
+          ],
+          "icon": "resource:///org/tunaos/Installer/images/yellowfin.svg"
         },
         {
           "name": "Skipjack",
@@ -146,7 +148,8 @@
               "imgref": "ghcr.io/tuna-os/skipjack:niri",
               "desc": "Niri scrolling Wayland compositor"
             }
-          ]
+          ],
+          "icon": "resource:///org/tunaos/Installer/images/skipjack.svg"
         },
         {
           "name": "Bonito",
@@ -192,9 +195,11 @@
               "imgref": "ghcr.io/tuna-os/bonito:niri",
               "desc": "Niri scrolling Wayland compositor"
             }
-          ]
+          ],
+          "icon": "resource:///org/tunaos/Installer/images/bonito.svg"
         }
-      ]
+      ],
+      "icon": "resource:///org/tunaos/Installer/images/tunaos.svg"
     },
     {
       "name": "Bluefin",
@@ -335,7 +340,8 @@
             }
           ]
         }
-      ]
+      ],
+      "icon": "resource:///org/tunaos/Installer/images/bluefin.svg"
     },
     {
       "name": "Aurora",
@@ -366,7 +372,8 @@
           "imgref": "ghcr.io/ublue-os/aurora:43",
           "desc": "Fedora 43 base"
         }
-      ]
+      ],
+      "icon": "resource:///org/tunaos/Installer/images/aurora.svg"
     },
     {
       "name": "Bazzite",
@@ -702,7 +709,8 @@
             }
           ]
         }
-      ]
+      ],
+      "icon": "resource:///org/tunaos/Installer/images/bazzite.svg"
     }
   ]
 }

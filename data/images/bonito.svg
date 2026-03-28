@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="12" fill="#E65100"/>
+  <ellipse cx="30" cy="34" rx="15" ry="9" fill="#FFCCBC"/>
+  <polygon points="45,34 57,25 57,43" fill="#FFCCBC"/>
+  <circle cx="21" cy="31" r="2" fill="#E65100"/>
+  <!-- Stripes -->
+  <line x1="28" y1="25" x2="26" y2="43" stroke="#FF8A65" stroke-width="2" opacity="0.6"/>
+  <line x1="34" y1="25" x2="32" y2="43" stroke="#FF8A65" stroke-width="2" opacity="0.6"/>
+</svg>
