@@ -65,7 +65,7 @@ def _load_manifest():
     # 3. Bundled GResource (default shipped with the installer).
     try:
         data = Gio.resources_lookup_data(
-            "/org/tunaos/Installer/data/images.json",
+            "/org/tunaos/Installer/images.json",
             Gio.ResourceLookupFlags.NONE,
         )
         logger.debug("Loaded image manifest from GResource")
@@ -73,7 +73,19 @@ def _load_manifest():
     except Exception:
         logger.warning("Could not load images.json from GResource, trying filesystem")
 
-    # 4. Filesystem fallback for development (run from repo root).
+    # 4. Installed data path (flatpak: /app/share/tuna-installer/images.json).
+    for installed in [
+        pathlib.Path("/app/share/tuna-installer/images.json"),
+        pathlib.Path("/usr/share/tuna-installer/images.json"),
+    ]:
+        try:
+            manifest = json.loads(installed.read_text())
+            logger.info(f"Loaded image manifest from installed path: {installed}")
+            return manifest
+        except Exception:
+            pass
+
+    # 5. Filesystem fallback for development (run from repo root).
     dev_path = pathlib.Path(__file__).resolve().parent.parent.parent / "data" / "images.json"
     try:
         manifest = json.loads(dev_path.read_text())

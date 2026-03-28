@@ -64,7 +64,12 @@ class VanillaWindow(Adw.ApplicationWindow):
     def __connect_signals(self):
         self.btn_back.connect("clicked", self.back)
         self.carousel.connect("page-changed", self.__on_page_changed)
-        self.__builder.widgets[-1].btn_next.connect("clicked", self.update_finals)
+        # Connect update_finals to whichever step widget was last added to the
+        # carousel — this may differ from widgets[-1] when a screen is skipped.
+        if self.__last_step_widget is not None:
+            self.__last_step_widget.btn_next.connect("clicked", self.update_finals)
+        else:
+            self.__builder.widgets[-1].btn_next.connect("clicked", self.update_finals)
         self.__view_confirm.connect("installation-confirmed", self.on_installation_confirmed)
 
         if os.environ.get("TUNA_TEST"):
@@ -96,6 +101,8 @@ class VanillaWindow(Adw.ApplicationWindow):
             self.carousel.remove(self.__view_progress)
             self.carousel.remove(self.__view_done)
 
+        self.__last_step_widget = None
+
         if "VANILLA_FORCE_TOUR" not in os.environ:
             for i, widget in enumerate(self.__builder.widgets):
                 if rebuild:
@@ -112,6 +119,7 @@ class VanillaWindow(Adw.ApplicationWindow):
                     continue
                 logger.info("(%s) Adding widget to carousel", widget.__gtype_name__)
                 self.carousel.append(widget)
+                self.__last_step_widget = widget
         else:
             self.__on_page_changed()
 

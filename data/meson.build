@@ -69,4 +69,8 @@ install_data('../recipe.json',
   install_dir: join_paths(get_option('datadir'), 'tuna-installer')
 )
 
+install_data('../data/images.json',
+  install_dir: join_paths(get_option('datadir'), 'tuna-installer')
+)
+
 subdir('icons')
