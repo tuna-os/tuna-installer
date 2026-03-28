@@ -194,10 +194,20 @@ class VanillaWindow(Adw.ApplicationWindow):
             page.btn_next.emit("clicked")
 
     def __on_close_request(self, *args):
+        if self.__is_done():
+            self.get_application().quit()
+            return True
         self.__on_exit_clicked()
         return True  # block the default close; dialog will quit() if confirmed
 
+    def __is_done(self):
+        cur_index = int(self.carousel.get_position())
+        return self.carousel.get_nth_page(cur_index) is self.__view_done
+
     def __on_exit_clicked(self, *args):
+        if self.__is_done():
+            self.get_application().quit()
+            return
         dialog = Adw.AlertDialog(
             heading=_("Exit Installer?"),
             body=_("Any progress will be lost."),
