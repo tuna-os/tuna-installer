@@ -1,54 +1,78 @@
 <div align="center">
-    <img src="data/icons/hicolor/scalable/apps/org.vanillaos.Installer.svg" height="64">
-    <h1>Vanilla OS Installer</h1>
-    <p>A frontend in GTK 4 and Libadwaita for Albius.</p>
+    <img src="data/icons/hicolor/scalable/apps/org.tunaos.Installer.svg" height="64">
+    <h1>TunaOS Installer</h1>
+    <p>A GTK 4 / Libadwaita Flatpak installer for <a href="https://github.com/tuna-os">TunaOS</a> and other <a href="https://universal-blue.org">Universal Blue</a> bootc images.</p>
     <hr />
-    <a href="https://hosted.weblate.org/engage/vanilla-os/">
-<img src="https://hosted.weblate.org/widgets/vanilla-os/-/first-setup/svg-badge.svg" alt="Stato traduzione" />
-</a>
-    <br />
-    <img src="data/screenshot.png">
 </div>
 
-## Build
+## Contributing Images
+
+The installer's image catalog is defined in a single JSON file:
+
+**[`data/images.json`](data/images.json)**
+
+Adding a new image is as simple as adding an entry to that file. The structure is a recursive tree of groups and leaves:
+
+```jsonc
+// Group node (expandable section in the UI)
+{
+  "name": "My Distro",
+  "subtitle": "Optional subtitle",
+  "icon": "resource:///org/tunaos/Installer/images/my-distro.svg",
+  "flatpaks": ["org.mozilla.firefox", "org.gnome.Console"],
+  "children": [
+    // Leaf node (selectable image)
+    {
+      "name": "Stable",
+      "imgref": "ghcr.io/my-org/my-image:latest",
+      "desc": "Optional description shown as tooltip"
+    }
+  ]
+}
+```
+
+- **`flatpaks`** — list of Flatpak app IDs to install on the target system. Inherited by children if not overridden.
+- **`icon`** — `resource:///org/tunaos/Installer/images/name.svg`, an absolute file path, or an XDG icon name. Drop your SVG/PNG into `data/images/` and add it to `tuna_installer/tuna-installer.gresource.xml`.
+- Distros can ship a **fully custom catalog** at `/etc/tuna-installer/images.json` — it overrides the bundled one entirely.
+
+PRs to add new images, icons, or flatpak lists are very welcome!
+
+## Building
+
+### Flatpak (recommended)
+
+```bash
+flatpak run org.flatpak.Builder --force-clean --user --install _build flatpak/org.tunaos.Installer.json
+flatpak run org.tunaos.Installer
+```
+
+### Meson (development)
+
+```bash
+meson setup build
+ninja -C build
+sudo ninja -C build install
+vanilla-installer
+```
 
 ### Dependencies
 
-- build-essential
-- meson
+- meson, ninja
 - libadwaita-1-dev
-- gettext
-- desktop-file-utils
+- gettext, desktop-file-utils
 - libgnome-desktop-4-dev
 - libgweather-4-dev
 - python3-requests
 - gir1.2-vte-3.91
-- libnma-dev
-- libnma-gtk4-dev
-- mutter-common
-- x11-xkb-utils
+- libnma-dev / libnma-gtk4-dev
 
-### Build
+## Custom Image Catalog Override
 
-```bash
-meson build
-ninja -C build
-```
+Distros can override the bundled image catalog without rebuilding the Flatpak:
 
-### Install
+| Path | Scope |
+|---|---|
+| `/etc/tuna-installer/images.json` | System-wide (distro ships this) |
+| `$XDG_CONFIG_HOME/tuna-installer/images.json` | Per-user (dev/testing) |
 
-```bash
-sudo ninja -C build install
-```
-
-## Run
-
-```bash
-vanilla-installer
-```
-
-### Using custom recipes
-
-Place a new recipe in `/etc/vanilla-installer/recipe.json` or launch the
-utility with the `VANILLA_CUSTOM_RECIPE` environment variable set to the path
-of the recipe.
+The first file found takes priority over the bundled default.
