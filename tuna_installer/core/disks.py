@@ -169,6 +169,36 @@ class Disk:
             return f"{size} B"
 
     @property
+    def model(self) -> str:
+        """Return drive model string from sysfs, or empty string if unavailable."""
+        for path in [
+            f"/sys/block/{self.__disk}/device/model",
+            f"/sys/block/{self.__disk}/device/name",
+        ]:
+            try:
+                with open(path) as f:
+                    return f.read().strip()
+            except OSError:
+                pass
+        return ""
+
+    @property
+    def vendor(self) -> str:
+        """Return drive vendor string from sysfs, or empty string if unavailable."""
+        try:
+            with open(f"/sys/block/{self.__disk}/device/vendor") as f:
+                return f.read().strip()
+        except OSError:
+            return ""
+
+    @property
+    def display_name(self) -> str:
+        """Human-friendly name: 'Vendor Model' if available, else device name."""
+        parts = [self.vendor, self.model]
+        label = " ".join(p for p in parts if p)
+        return label if label else self.__disk
+
+    @property
     def is_removable(self):
         if os.path.isfile("/sys/block/" + self.__disk + "/removable"):
             with open("/sys/block/" + self.__disk + "/removable") as f:

@@ -120,6 +120,21 @@
                     </object>
                 </child>
                 <child>
+                    <object class="GtkButton" id="copy_log_button">
+                        <property name="visible">True</property>
+                        <property name="margin-end">6</property>
+                        <property name="margin-start">12</property>
+                        <property name="margin-top">40</property>
+                        <property name="icon-name">edit-copy-symbolic</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <property name="tooltip-text" translatable="yes">Copy Console Log</property>
+                        <style>
+                            <class name="circular" />
+                        </style>
+                    </object>
+                </child>
+                <child>
                     <object class="GtkButton" id="console_button">
                         <property name="visible">True</property>
                         <property name="margin-end">40</property>

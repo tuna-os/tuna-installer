@@ -38,8 +38,8 @@ class VanillaDefaultDiskEntry(Adw.ActionRow):
         super().__init__(**kwargs)
         self.__parent = parent
         self.__disk = disk
-        self.set_title(disk.name)
-        self.set_subtitle(disk.pretty_size)
+        self.set_title(disk.display_name)
+        self.set_subtitle(f"{disk.disk} · {disk.pretty_size}")
 
         self.chk_button.connect(
             "toggled", self.__parent.on_disk_entry_toggled, self.disk
@@ -758,7 +758,7 @@ class VanillaDefaultDisk(Adw.Bin):
 
         # Deselect virtual row when a real disk row is selected
         for entry in self.__registry_disks:
-            entry.select_button.set_group(self.__virtual_check)
+            entry.chk_button.set_group(self.__virtual_check)
 
         return row
 
