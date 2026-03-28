@@ -107,6 +107,9 @@ class VanillaWindow(Adw.ApplicationWindow):
                     continue
                 if "default_image" in property_list[i] and mode == 1:
                     continue
+                if getattr(widget, "skip_screen", False):
+                    logger.info("(%s) Skipping single-image screen", widget.__gtype_name__)
+                    continue
                 logger.info("(%s) Adding widget to carousel", widget.__gtype_name__)
                 self.carousel.append(widget)
         else:
@@ -146,6 +149,13 @@ class VanillaWindow(Adw.ApplicationWindow):
             self.finals = self.__builder.get_finals()
         else:
             self.finals = json.loads(os.environ["VANILLA_FORCE_TOUR"])
+
+        # extract the pretty name from whichever image finals key is present
+        self.pretty_name = None
+        for f in self.finals:
+            if isinstance(f, dict) and "pretty_name" in f:
+                self.pretty_name = f["pretty_name"]
+                break
 
         self.__view_confirm.update(self.finals)
 

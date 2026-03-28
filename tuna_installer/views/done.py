@@ -37,12 +37,6 @@ class VanillaDone(Adw.Bin):
         self.__log = None
         self.delta = False
 
-        self.status_page.set_description(
-            _("Restart your device to enjoy your {} experience.").format(
-                self.__window.recipe["distro_name"]
-            )
-        )
-
         self.btn_reboot.connect("clicked", self.__on_reboot_clicked)
         self.btn_close.connect("clicked", self.__on_close_clicked)
         self.btn_log.connect("clicked", self.__on_log_clicked)
@@ -50,7 +44,13 @@ class VanillaDone(Adw.Bin):
     def set_result(self, result, terminal):
         self.__terminal = terminal
 
-        if not result:
+        if result:
+            pretty_name = getattr(self.__window, "pretty_name", None) \
+                or self.__window.recipe.get("distro_name", "the operating system")
+            self.status_page.set_description(
+                _("Restart your device to enjoy your {} experience.").format(pretty_name)
+            )
+        else:
             self.status_page.set_icon_name("dialog-error-symbolic")
             self.status_page.set_title(_("Something went wrong"))
             self.status_page.set_description(

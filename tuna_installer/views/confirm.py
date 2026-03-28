@@ -69,6 +69,8 @@ class VanillaConfirm(Adw.Bin):
             pass
         self.active_widgets = []
 
+        pretty_name = None
+
         for final in finals:
             for key, value in final.items():
                 if key == "language":
@@ -128,14 +130,31 @@ class VanillaConfirm(Adw.Bin):
                                     "drive-harddisk-system-symbolic",
                                 )
                             )
-                elif key == "custom_image":
+                elif key == "selected_image":
+                    pn = final.get("pretty_name") or value
+                    pretty_name = pn
                     self.active_widgets.append(
                         VanillaChoiceEntry(
                             _("Image"),
-                            f"{value}",
+                            pn,
+                            "application-x-appliance-symbolic",
+                        )
+                    )
+                elif key == "custom_image":
+                    pn = final.get("pretty_name") or value
+                    pretty_name = pn
+                    self.active_widgets.append(
+                        VanillaChoiceEntry(
+                            _("Image"),
+                            value,
                             "image-missing-symbolic"
                         )
                     )
+
+        if pretty_name:
+            self.btn_confirm.set_label(_("Install {name}").format(name=pretty_name))
+        else:
+            self.btn_confirm.set_label(_("Install"))
 
         for widget in self.active_widgets:
             self.group_changes.add(widget)

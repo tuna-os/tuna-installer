@@ -25,7 +25,7 @@
                                             <object class="AdwPreferencesGroup">
                                                 <child>
                                                     <object class="GtkButton" id="btn_confirm">
-                                                        <property name="label" translatable="yes">Install Vanilla OS</property>
+                                                        <property name="label" translatable="yes">Install</property>
                                                         <property name="valign">center</property>
                                                         <property name="halign">center</property>
                                                         <style>

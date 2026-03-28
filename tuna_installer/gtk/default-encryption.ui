@@ -26,7 +26,7 @@
           <object class="AdwStatusPage" id="status_page">
             <property name="icon-name">channel-secure-symbolic</property>
             <property name="title" translatable="yes">Device Encryption</property>
-            <property name="description" translatable="yes">Vanilla OS encrypts your disk to protect your personal information</property>
+            <property name="description" translatable="yes">Encrypting your disk protects your personal information</property>
             <child>
               <object class="AdwPreferencesPage">
                 <child>

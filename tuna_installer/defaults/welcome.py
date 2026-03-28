@@ -39,8 +39,8 @@ class VanillaDefaultWelcome(Adw.Bin):
         self.__step = step
         self.delta = False
 
-        distro_name = self.__distro_info.get("name", "Vanilla OS")
-        distro_logo = self.__distro_info.get("logo", "org.vanillaos.Installer-flower")
+        distro_name = self.__distro_info.get("name", "TunaOS")
+        distro_logo = self.__distro_info.get("logo", "org.tunaos.Installer")
 
         self.status_page.set_icon_name(distro_logo)
         self.status_page.set_title(f"Welcome to {distro_name}!")

@@ -88,9 +88,41 @@ _MANIFEST = _load_manifest()
 _IMAGE_TREE = _MANIFEST["images"]
 _DEFAULT_IMAGE = _MANIFEST["default_image"]
 _FALLBACK_FLATPAKS = _MANIFEST["fallback_flatpaks"]
+_APP_NAME = _MANIFEST.get("app_name", "TunaOS Installer")
 
 
-# ── Icon helpers ──────────────────────────────────────────────────────────────
+# ── Pretty name helpers ───────────────────────────────────────────────────────
+
+def _imgref_to_pretty_name(imgref: str) -> str:
+    """Derive a human-readable name from an OCI image reference.
+
+    'ghcr.io/ublue-os/bluefin-dx:latest' → 'Bluefin DX'
+    First word: Title Case. Subsequent words: ALL CAPS.
+    """
+    try:
+        slug = imgref.split("/")[-1].split(":")[0]   # e.g. "bluefin-dx"
+        parts = slug.replace("_", "-").split("-")
+        return " ".join(
+            p.capitalize() if i == 0 else p.upper()
+            for i, p in enumerate(parts)
+        )
+    except Exception:
+        return imgref
+
+
+def _count_leaves(nodes: list) -> int:
+    """Recursively count selectable leaf image nodes in the tree."""
+    count = 0
+    for node in nodes:
+        if "imgref" in node:
+            count += 1
+        else:
+            count += _count_leaves(node.get("children", []))
+    return count
+
+
+_LEAF_COUNT = _count_leaves(_IMAGE_TREE)
+
 
 def _make_icon(icon_spec: str, size: int = 32) -> "Gtk.Image | None":
     """Return a GtkImage for an icon spec, or None if blank/unresolvable.
@@ -140,6 +172,7 @@ class VanillaDefaultImage(Adw.Bin):
         self.__selected_imgref = _DEFAULT_IMAGE
         self.__selected_flatpaks = None  # per-image flatpak list (None = use fallback)
         self.__selected_icon = None      # icon spec for selected image (str or None)
+        self.__selected_pretty_name = _imgref_to_pretty_name(_DEFAULT_IMAGE)
         self.__all_expanders = []   # every ExpanderRow widget
         self.__leaf_rows = []       # [(row, check, imgref, flatpaks, icon, search_str, [ancestor_exps])]
 
@@ -257,7 +290,8 @@ class VanillaDefaultImage(Adw.Bin):
             self.__selected_imgref = imgref
             self.__selected_flatpaks = flatpaks
             self.__selected_icon = icon
-            logger.info(f"Image selected: {imgref}")
+            self.__selected_pretty_name = _imgref_to_pretty_name(imgref)
+            logger.info(f"Image selected: {imgref} ({self.__selected_pretty_name})")
             if self.row_custom.get_expanded():
                 self.row_custom.set_expanded(False)
             self.__update_btn_next()
@@ -267,6 +301,7 @@ class VanillaDefaultImage(Adw.Bin):
             self.__radio_anchor.set_active(True)
             self.__selected_imgref = None
             self.__selected_icon = None
+            self.__selected_pretty_name = None
         self.__update_btn_next()
 
     def __on_url_changed(self, entry):
@@ -330,19 +365,27 @@ class VanillaDefaultImage(Adw.Bin):
 
     # ── Test / finals ─────────────────────────────────────────────────────────
 
+    @property
+    def skip_screen(self) -> bool:
+        """True when the manifest contains only one selectable image."""
+        return _LEAF_COUNT <= 1
+
     def test_auto_advance(self):
         self.btn_next.emit("clicked")
 
     def get_finals(self):
         flatpaks = self.__selected_flatpaks or _FALLBACK_FLATPAKS
         if self.row_custom.get_expanded():
+            url = self.image_url_entry.get_text().strip()
             return {
-                "custom_image": self.image_url_entry.get_text().strip(),
+                "custom_image": url,
+                "pretty_name": _imgref_to_pretty_name(url),
                 "flatpaks": _FALLBACK_FLATPAKS,
                 "icon": None,
             }
         return {
             "selected_image": self.__selected_imgref,
+            "pretty_name": self.__selected_pretty_name,
             "flatpaks": flatpaks,
             "icon": self.__selected_icon,
         }
