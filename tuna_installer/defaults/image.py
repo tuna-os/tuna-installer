@@ -17,6 +17,7 @@
 
 import json
 import logging
+import os
 import re
 
 from gi.repository import Adw, Gio, Gtk
@@ -29,24 +30,57 @@ logger = logging.getLogger("Installer::Image")
 # Structure: {"default_image", "fallback_flatpaks", "images": [recursive tree]}
 # Each node is a group {"name", "children", ...} or leaf {"name", "imgref", ...}.
 # Leaves and groups may carry a "flatpaks" list; leaves inherit from ancestors.
+#
+# Distros can ship a custom image catalog by placing their own images.json at:
+#   /etc/tuna-installer/images.json          (system-wide override)
+#   $XDG_CONFIG_HOME/tuna-installer/images.json  (per-user override, dev/testing)
+# The first file found takes priority over the bundled GResource default.
 
 def _load_manifest():
+    import pathlib
+
+    # 1. Per-user override (useful for testing custom catalogs without root).
+    xdg_config = pathlib.Path(
+        os.environ.get("XDG_CONFIG_HOME", pathlib.Path.home() / ".config")
+    )
+    user_override = xdg_config / "tuna-installer" / "images.json"
+    if user_override.exists():
+        try:
+            manifest = json.loads(user_override.read_text())
+            logger.info(f"Loaded image manifest from user override: {user_override}")
+            return manifest
+        except Exception as e:
+            logger.warning(f"Failed to parse user override {user_override}: {e}")
+
+    # 2. System-wide override (distros drop their catalog here).
+    system_override = pathlib.Path("/etc/tuna-installer/images.json")
+    if system_override.exists():
+        try:
+            manifest = json.loads(system_override.read_text())
+            logger.info(f"Loaded image manifest from system override: {system_override}")
+            return manifest
+        except Exception as e:
+            logger.warning(f"Failed to parse system override {system_override}: {e}")
+
+    # 3. Bundled GResource (default shipped with the installer).
     try:
         data = Gio.resources_lookup_data(
             "/org/tunaos/Installer/data/images.json",
             Gio.ResourceLookupFlags.NONE,
         )
+        logger.debug("Loaded image manifest from GResource")
         return json.loads(data.get_data().decode())
     except Exception:
         logger.warning("Could not load images.json from GResource, trying filesystem")
 
-    # Fallback for development: load from repo data/ directory.
-    import pathlib
-    path = pathlib.Path(__file__).resolve().parent.parent.parent / "data" / "images.json"
+    # 4. Filesystem fallback for development (run from repo root).
+    dev_path = pathlib.Path(__file__).resolve().parent.parent.parent / "data" / "images.json"
     try:
-        return json.loads(path.read_text())
+        manifest = json.loads(dev_path.read_text())
+        logger.info(f"Loaded image manifest from dev path: {dev_path}")
+        return manifest
     except Exception as e:
-        logger.error(f"Failed to load image manifest: {e}")
+        logger.error(f"Failed to load image manifest from all sources: {e}")
         return {"default_image": "", "fallback_flatpaks": [], "images": []}
 
 
