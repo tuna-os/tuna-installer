@@ -15,55 +15,45 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 import logging
 import re
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, Gio, Gtk
 
 logger = logging.getLogger("Installer::Image")
 
-# ── Known TunaOS images ───────────────────────────────────────────────────────
-# Each entry: (base_id, tag, display_name, description)
-# Add more rows here as new images are published.
 
-_BASES = [
-    ("albacore", "Albacore"),
-    ("yellowfin", "Yellowfin"),
-    ("skipjack",  "Skipjack"),
-    ("bonito",    "Bonito"),
-]
+# ── Load image catalog from bundled JSON ──────────────────────────────────────
+# The manifest lives in data/images.json and is bundled as a GResource.
+# Structure: {"default_image", "fallback_flatpaks", "images": [recursive tree]}
+# Each node is a group {"name", "children", ...} or leaf {"name", "imgref", ...}.
+# Leaves and groups may carry a "flatpaks" list; leaves inherit from ancestors.
 
-_TAGS = [
-    ("gnome",     "GNOME",                  "GNOME desktop"),
-    ("gnome-hwe", "GNOME — HWE Kernel",     "GNOME with Hardware Enablement kernel"),
-    ("gnome50",   "GNOME 50",               "GNOME 50 series"),
-    ("gnome-gdx", "GNOME — Gaming",         "GNOME with gaming optimisations"),
-    ("kde",       "KDE Plasma",             "KDE Plasma desktop"),
-    ("kde-hwe",   "KDE Plasma — HWE Kernel","KDE Plasma with Hardware Enablement kernel"),
-    ("kde-gdx",   "KDE Plasma — Gaming",    "KDE Plasma with gaming optimisations"),
-    ("niri",      "Niri",                   "Niri scrolling Wayland compositor"),
-]
+def _load_manifest():
+    try:
+        data = Gio.resources_lookup_data(
+            "/org/tunaos/Installer/data/images.json",
+            Gio.ResourceLookupFlags.NONE,
+        )
+        return json.loads(data.get_data().decode())
+    except Exception:
+        logger.warning("Could not load images.json from GResource, trying filesystem")
 
-_DEFAULT_IMAGE = "ghcr.io/tuna-os/yellowfin:gnome-hwe"
-
-_REGISTRY = "ghcr.io/tuna-os"
-
-
-def _build_image_catalog():
-    """Return list of dicts for every base×tag combination."""
-    catalog = []
-    for base_id, base_name in _BASES:
-        for tag_id, tag_name, tag_desc in _TAGS:
-            catalog.append({
-                "name":    f"{base_name}: {tag_name}",
-                "imgref":  f"{_REGISTRY}/{base_id}:{tag_id}",
-                "desc":    tag_desc,
-                "search":  f"{base_id} {base_name} {tag_id} {tag_name} {tag_desc}".lower(),
-            })
-    return catalog
+    # Fallback for development: load from repo data/ directory.
+    import pathlib
+    path = pathlib.Path(__file__).resolve().parent.parent.parent / "data" / "images.json"
+    try:
+        return json.loads(path.read_text())
+    except Exception as e:
+        logger.error(f"Failed to load image manifest: {e}")
+        return {"default_image": "", "fallback_flatpaks": [], "images": []}
 
 
-_IMAGE_CATALOG = _build_image_catalog()
+_MANIFEST = _load_manifest()
+_IMAGE_TREE = _MANIFEST["images"]
+_DEFAULT_IMAGE = _MANIFEST["default_image"]
+_FALLBACK_FLATPAKS = _MANIFEST["fallback_flatpaks"]
 
 
 # ── Widget ────────────────────────────────────────────────────────────────────
@@ -72,11 +62,11 @@ _IMAGE_CATALOG = _build_image_catalog()
 class VanillaDefaultImage(Adw.Bin):
     __gtype_name__ = "VanillaDefaultImage"
 
-    btn_next       = Gtk.Template.Child()
-    search_entry   = Gtk.Template.Child()
-    list_images    = Gtk.Template.Child()
-    list_custom    = Gtk.Template.Child()
-    row_custom     = Gtk.Template.Child()
+    btn_next        = Gtk.Template.Child()
+    search_entry    = Gtk.Template.Child()
+    list_images     = Gtk.Template.Child()
+    list_custom     = Gtk.Template.Child()
+    row_custom      = Gtk.Template.Child()
     image_url_entry = Gtk.Template.Child()
 
     def __init__(self, window, distro_info, key, step, **kwargs):
@@ -88,12 +78,17 @@ class VanillaDefaultImage(Adw.Bin):
         self.delta = False
 
         self.__selected_imgref = _DEFAULT_IMAGE
-        self.__rows = []   # list of (Gtk.ListBoxRow, imgref, search_str)
+        self.__selected_flatpaks = None  # per-image flatpak list (None = use fallback)
+        self.__all_expanders = []   # every ExpanderRow widget
+        self.__leaf_rows = []       # [(row, check, imgref, flatpaks, search_str, [ancestor_exps])]
 
+        # Hidden anchor for the radio CheckButton group.
+        self.__radio_anchor = Gtk.CheckButton()
+
+        self.list_images.set_selection_mode(Gtk.SelectionMode.NONE)
         self.__build_list()
 
         self.search_entry.connect("search-changed", self.__on_search_changed)
-        self.list_images.connect("row-selected", self.__on_row_selected)
         self.row_custom.connect("notify::expanded", self.__on_custom_toggled)
         self.image_url_entry.connect("changed", self.__on_url_changed)
         self.btn_next.connect("clicked", self.__window.next)
@@ -101,96 +96,96 @@ class VanillaDefaultImage(Adw.Bin):
         self.__select_default()
         self.__update_btn_next()
 
-    # ── List construction ─────────────────────────────────────────────────────
+    # ── Recursive tree construction ───────────────────────────────────────────
 
     def __build_list(self):
-        # Allow extra images defined in the recipe (for future extensibility)
+        for node in _IMAGE_TREE:
+            self.__build_node(self.list_images, node, [], "")
+
+        # Recipe-defined extra images (flat group).
         extra = self.__window.recipe.get("images", [])
-        catalog = list(_IMAGE_CATALOG)
-        for img in extra:
-            imgref = img.get("imgref", "")
-            if imgref and not any(r[1] == imgref for r in self.__rows):
-                name = img.get("name", imgref)
-                desc = img.get("description", "")
-                catalog.append({
-                    "name":   name,
-                    "imgref": imgref,
-                    "desc":   desc,
-                    "search": f"{name} {imgref} {desc}".lower(),
-                })
+        if extra:
+            exp = Adw.ExpanderRow(title="Recipe Images")
+            self.__all_expanders.append(exp)
+            for img in extra:
+                imgref = img.get("imgref", "")
+                if not imgref:
+                    continue
+                self.__add_leaf(
+                    exp, img.get("name", imgref), imgref,
+                    img.get("description", ""), "", [exp])
+            self.list_images.append(exp)
 
-        for entry in catalog:
-            row = self.__make_row(entry)
-            self.list_images.append(row)
-            self.__rows.append((row, entry["imgref"], entry["search"]))
+    def __build_node(self, parent, node, ancestors, search_ctx, flatpaks_ctx=None):
+        """Recursively build ExpanderRow groups and ActionRow leaves."""
+        # Inherit flatpaks from nearest ancestor that defines them.
+        node_flatpaks = node.get("flatpaks", flatpaks_ctx)
+        if "imgref" in node:
+            self.__add_leaf(parent, node["name"], node["imgref"],
+                            node.get("desc", ""), search_ctx, ancestors,
+                            node_flatpaks)
+            return
 
-        self.list_images.set_filter_func(self.__filter_func)
+        exp = Adw.ExpanderRow(title=node["name"])
+        if "subtitle" in node:
+            exp.set_subtitle(node["subtitle"])
+        self.__all_expanders.append(exp)
 
-    def __make_row(self, entry):
-        row = Adw.ActionRow()
-        row.set_title(entry["name"])
-        row.set_subtitle(entry["imgref"])
-        if entry.get("desc"):
-            row.set_tooltip_text(entry["desc"])
+        child_ctx = search_ctx + " " + node["name"]
+        if "search_extra" in node:
+            child_ctx += " " + node["search_extra"]
+        child_ancestors = ancestors + [exp]
+
+        for child in node.get("children", []):
+            self.__build_node(exp, child, child_ancestors, child_ctx, node_flatpaks)
+
+        if parent is self.list_images:
+            parent.append(exp)
+        else:
+            parent.add_row(exp)
+
+    def __add_leaf(self, parent, name, imgref, desc, search_ctx, ancestors,
+                   flatpaks=None):
+        search_str = f"{search_ctx} {name} {desc} {imgref}".lower()
+
+        row = Adw.ActionRow(title=name, subtitle=imgref)
+        if desc:
+            row.set_tooltip_text(desc)
         row.set_activatable(True)
-        return row
+
+        check = Gtk.CheckButton()
+        check.set_group(self.__radio_anchor)
+        row.add_prefix(check)
+        row.set_activatable_widget(check)
+        check.connect("toggled", self.__on_check_toggled, imgref, flatpaks)
+
+        parent.add_row(row)
+        self.__leaf_rows.append((row, check, imgref, flatpaks, search_str, list(ancestors)))
 
     def __select_default(self):
-        for row, imgref, _ in self.__rows:
+        for _row, check, imgref, _flatpaks, _search, ancestors in self.__leaf_rows:
             if imgref == _DEFAULT_IMAGE:
-                self.list_images.select_row(row)
+                check.set_active(True)
+                for exp in ancestors:
+                    exp.set_expanded(True)
                 return
-        # Fall back to first row
-        if self.__rows:
-            self.list_images.select_row(self.__rows[0][0])
-
-    # ── Filtering ─────────────────────────────────────────────────────────────
-
-    def __filter_func(self, row):
-        query = self.search_entry.get_text().lower().strip()
-        if not query:
-            return True
-        for list_row, imgref, search_str in self.__rows:
-            if list_row is row:
-                return query in search_str
-        return True
-
-    def __on_search_changed(self, entry):
-        self.list_images.invalidate_filter()
-        # Re-select first visible row if current selection is now hidden
-        selected = self.list_images.get_selected_row()
-        if selected is None or not selected.get_visible():
-            self.__select_first_visible()
-
-    def __select_first_visible(self):
-        row = self.list_images.get_row_at_index(0)
-        idx = 0
-        while row is not None:
-            if row.get_visible():
-                self.list_images.select_row(row)
-                return
-            idx += 1
-            row = self.list_images.get_row_at_index(idx)
-        self.list_images.unselect_all()
-        self.__selected_imgref = None
-        self.__update_btn_next()
+        if self.__leaf_rows:
+            self.__leaf_rows[0][1].set_active(True)
 
     # ── Selection handlers ────────────────────────────────────────────────────
 
-    def __on_row_selected(self, listbox, row):
-        if row is None:
-            self.__selected_imgref = None
-        else:
-            for list_row, imgref, _ in self.__rows:
-                if list_row is row:
-                    self.__selected_imgref = imgref
-                    logger.info(f"Image selected: {imgref}")
-                    break
-        self.__update_btn_next()
+    def __on_check_toggled(self, check, imgref, flatpaks):
+        if check.get_active():
+            self.__selected_imgref = imgref
+            self.__selected_flatpaks = flatpaks
+            logger.info(f"Image selected: {imgref}")
+            if self.row_custom.get_expanded():
+                self.row_custom.set_expanded(False)
+            self.__update_btn_next()
 
     def __on_custom_toggled(self, expander, _param):
         if expander.get_expanded():
-            self.list_images.unselect_all()
+            self.__radio_anchor.set_active(True)
             self.__selected_imgref = None
         self.__update_btn_next()
 
@@ -202,6 +197,46 @@ class VanillaDefaultImage(Adw.Bin):
         else:
             entry.remove_css_class("error")
         self.__update_btn_next()
+
+    # ── Search / filtering ────────────────────────────────────────────────────
+
+    def __on_search_changed(self, entry):
+        query = entry.get_text().lower().strip()
+
+        if not query:
+            for exp in self.__all_expanders:
+                exp.set_visible(True)
+                exp.set_expanded(False)
+            for row, _, _, _, _, _ in self.__leaf_rows:
+                row.set_visible(True)
+            self.__expand_default_path()
+            return
+
+        # Determine which leaves match and which expanders are needed.
+        visible_expanders = set()
+        for row, _, _, _flatpaks, search_str, ancestors in self.__leaf_rows:
+            if query in search_str:
+                row.set_visible(True)
+                for exp in ancestors:
+                    visible_expanders.add(id(exp))
+            else:
+                row.set_visible(False)
+
+        for exp in self.__all_expanders:
+            if id(exp) in visible_expanders:
+                exp.set_visible(True)
+                exp.set_expanded(True)
+            else:
+                exp.set_visible(False)
+
+    def __expand_default_path(self):
+        for _, _, imgref, _, _, ancestors in self.__leaf_rows:
+            if imgref == _DEFAULT_IMAGE:
+                for exp in ancestors:
+                    exp.set_expanded(True)
+                return
+        if self.__all_expanders:
+            self.__all_expanders[0].set_expanded(True)
 
     # ── Sensitivity ───────────────────────────────────────────────────────────
 
@@ -219,7 +254,14 @@ class VanillaDefaultImage(Adw.Bin):
         self.btn_next.emit("clicked")
 
     def get_finals(self):
+        flatpaks = self.__selected_flatpaks or _FALLBACK_FLATPAKS
         if self.row_custom.get_expanded():
-            return {"custom_image": self.image_url_entry.get_text().strip()}
-        return {"selected_image": self.__selected_imgref}
+            return {
+                "custom_image": self.image_url_entry.get_text().strip(),
+                "flatpaks": _FALLBACK_FLATPAKS,
+            }
+        return {
+            "selected_image": self.__selected_imgref,
+            "flatpaks": flatpaks,
+        }
 

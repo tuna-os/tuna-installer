@@ -109,6 +109,9 @@ class Processor:
         # --- Hostname ---
         hostname = merged.get("hostname", sys_recipe.get("hostname", "tunaos"))
 
+        # --- Flatpaks ---
+        flatpaks = merged.get("flatpaks", [])
+
         # --- SELinux / unified storage ---
         selinux_disabled = sys_recipe.get("selinuxDisabled", False)
         unified_storage = sys_recipe.get("unifiedStorage", False)
@@ -127,6 +130,7 @@ class Processor:
             "selinuxDisabled": selinux_disabled,
             "unifiedStorage": unified_storage,
             "hostname": hostname,
+            "flatpaks": flatpaks,
         }
 
         logger.info(f"Generated fisherman recipe: disk={disk_device}, image={image}, encryption={encryption_type}")

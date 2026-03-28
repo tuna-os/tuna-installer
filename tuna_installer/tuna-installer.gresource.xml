@@ -46,6 +46,7 @@
     <file>assets/ready.svg</file>
     <file>assets/containerized.svg</file>
     <file>assets/unsupported.svg</file>
+    <file>../data/images.json</file>
   </gresource>
   <gresource prefix="/org/tunaos/Installer/icons/scalable/actions/">
     <file preprocess="xml-stripblanks">../data/icons/hicolor/symbolic/actions/background-app-ghost-symbolic.svg</file>
