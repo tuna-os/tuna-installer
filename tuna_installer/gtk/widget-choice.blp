@@ -1,0 +1,12 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaChoiceEntry: Adw.ActionRow {
+  title: "Choice Name";
+  subtitle: "-Choice Description";
+
+  [prefix]
+  Image img_choice {
+    valign: center;
+  }
+}

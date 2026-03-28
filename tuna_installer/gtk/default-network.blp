@@ -1,0 +1,90 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDefaultNetwork: Adw.Bin {
+  hexpand: true;
+  vexpand: true;
+
+  Overlay {
+    valign: center;
+
+    [overlay]
+    Button btn_next {
+      sensitive: false;
+      margin-end: 12;
+      margin-start: 12;
+      icon-name: "go-next-symbolic";
+      halign: end;
+      valign: center;
+      tooltip-text: _("Next");
+
+      styles [
+        "circular",
+        "suggested-action",
+      ]
+    }
+
+    Adw.StatusPage {
+      title: _("Internet");
+      description: _("An active internet connection is required to install the system");
+      icon-name: "network-wireless-symbolic";
+
+      Adw.Clamp {
+        maximum-size: 600;
+
+        Box {
+          orientation: vertical;
+          hexpand: false;
+
+          Adw.PreferencesGroup wired_group {
+            title: _("Wired");
+          }
+
+          Adw.PreferencesGroup wireless_group {
+            title: _("Wireless Networks");
+          }
+
+          Adw.PreferencesGroup advanced_group {
+            title: _("Advanced");
+
+            Adw.ActionRow hidden_network_row {
+              title: _("Connect to Hidden Network...");
+
+              [prefix]
+              Overlay {
+                vexpand: false;
+                hexpand: false;
+                margin-end: 10;
+
+                Image {
+                  icon-name: "network-wireless-signal-none-symbolic";
+                }
+
+                [overlay]
+                Image {
+                  valign: end;
+                  halign: start;
+                  margin-start: 10;
+                  margin-bottom: 10;
+                  icon-name: "background-app-ghost-symbolic";
+                  pixel-size: 14;
+                }
+              }
+            }
+
+            Adw.ActionRow proxy_settings_row {
+              title: _("Open Proxy Settings...");
+
+              [prefix]
+              Image {
+                margin-start: 5;
+                margin-end: 5;
+                icon-name: "preferences-system-network-proxy-symbolic";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

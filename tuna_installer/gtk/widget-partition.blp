@@ -1,0 +1,164 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $PartitionSelector: Adw.PreferencesPage {
+  Adw.PreferencesGroup open_gparted_group {
+    Adw.ActionRow open_gparted_row {
+      icon-name: "vanilla-installer-harddisk-symbolic";
+      title: _("Manually Partition");
+      subtitle: _("Open GParted to manually partition the disk");
+
+      [suffix]
+      Button launch_gparted {
+        icon-name: "adw-external-link-symbolic";
+        valign: center;
+        halign: center;
+
+        styles [
+          "circular",
+        ]
+      }
+
+      activatable-widget: launch_gparted;
+    }
+  }
+
+  Adw.PreferencesGroup boot_part {
+    title: _("Boot Partition");
+    description: _(
+      "The partition to mount under “/boot”. This directory stores files for booting into Vanilla OS. Minimum space required in the partition is "
+    );
+
+    Adw.ExpanderRow boot_part_expand {
+      title: _("No Partition Selected");
+      subtitle: _("Please select a partition from the options below");
+    }
+  }
+
+  Adw.PreferencesGroup boot_small_error {
+    styles [
+      "error",
+    ]
+
+    visible: false;
+  }
+
+  Adw.PreferencesGroup efi_part {
+    title: _("EFI Partition");
+    description: _(
+      "The partition to mount under “/boot/efi”. This directory stores files for booting in the bootloader. Minimum space required in the partition is "
+    );
+
+    Adw.ExpanderRow efi_part_expand {
+      title: _("No Partition Selected");
+      subtitle: _("Please select a partition from the options below");
+    }
+
+    Adw.ActionRow {
+      title: _("Keep EFI");
+      subtitle: _("Choose to not format your EFI partition. Make sure this is turned on if you are dual-booting");
+
+      [suffix]
+      Switch keep_efi_part {
+        valign: center;
+      }
+
+      activatable-widget: keep_efi_part;
+    }
+  }
+
+  Adw.PreferencesGroup efi_small_error {
+    styles [
+      "error",
+    ]
+
+    visible: false;
+  }
+
+  Adw.PreferencesGroup bios_part {
+    title: _("BIOS Boot Partition");
+    description: _(
+      "The partition required by GPT-formatted disks to support booting from BIOS systems. It must be located in the first 2 TB of the disk and must be exactly 1 Mebibyte (1 MiB)."
+    );
+
+    Adw.ExpanderRow bios_part_expand {
+      title: _("No Partition Selected");
+      subtitle: _("Please select a partition from the options below");
+    }
+  }
+
+  Adw.PreferencesGroup bios_small_error {
+    styles [
+      "error",
+    ]
+
+    visible: false;
+    title: _("BIOS partition must be exactly 1 MiB.");
+  }
+
+  Adw.PreferencesGroup root_part {
+    title: _("Root Partition");
+    description: _(
+      "The partition to mount under “/”. It will be automatically converted into an LVM thin pool during installation. Minimum space required in the partition is "
+    );
+
+    Adw.ExpanderRow root_part_expand {
+      title: _("No Partition Selected");
+      subtitle: _("Please select a partition from the options below");
+    }
+  }
+
+  Adw.PreferencesGroup root_small_error {
+    styles [
+      "error",
+    ]
+
+    visible: false;
+  }
+
+  Adw.PreferencesGroup var_part {
+    title: _("Var Partition");
+    description: _(
+      "The partition to mount under “/var”. This directory stores all user data like personal documents and system-wide configuration. Minimum space required in the partition is "
+    );
+
+    Adw.ExpanderRow var_part_expand {
+      title: _("No Partition Selected");
+      subtitle: _("Please select a partition from the options below");
+    }
+  }
+
+  Adw.PreferencesGroup var_small_error {
+    styles [
+      "error",
+    ]
+
+    visible: false;
+  }
+
+  Adw.PreferencesGroup swap_part {
+    visible: false;
+    title: _("Swap Partition");
+    description: _(
+      "Swap acts as a virtual extension of your RAM and enables hibernation. Vanilla OS already uses zram to provide swapping at no storage cost."
+    );
+
+    Adw.ActionRow {
+      title: _("Swap Partition");
+      subtitle: _("Choose a partition to use for swap alongside zram. This is not required for hibernation.");
+
+      [suffix]
+      Switch use_swap_part {
+        valign: center;
+      }
+
+      activatable-widget: use_swap_part;
+    }
+
+    Adw.ExpanderRow swap_part_expand {
+      visible: bind use_swap_part.active;
+      title: _("No Partition Selected");
+      subtitle: _("Please select a partition from the options below");
+    }
+  }
+}

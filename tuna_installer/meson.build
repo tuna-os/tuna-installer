@@ -2,11 +2,66 @@ pkgdatadir = join_paths(get_option('prefix'), get_option('datadir'), meson.proje
 moduledir = join_paths(pkgdatadir, 'tuna_installer')
 gnome = import('gnome')
 
+blueprint_compiler = find_program('blueprint-compiler', version: '>= 0.12.0')
+
+blueprints = custom_target(
+  'blueprints',
+  input: files(
+    'gtk/confirm.blp',
+    'gtk/default-conn-check.blp',
+    'gtk/default-disk.blp',
+    'gtk/default-encryption.blp',
+    'gtk/default-image.blp',
+    'gtk/default-keyboard.blp',
+    'gtk/default-language.blp',
+    'gtk/default-network.blp',
+    'gtk/default-nvidia.blp',
+    'gtk/default-theme.blp',
+    'gtk/default-timezone.blp',
+    'gtk/default-users.blp',
+    'gtk/default-vm.blp',
+    'gtk/default-welcome.blp',
+    'gtk/dialog.blp',
+    'gtk/dialog-disk.blp',
+    'gtk/dialog-disk-confirm.blp',
+    'gtk/dialog-output.blp',
+    'gtk/dialog-poweroff.blp',
+    'gtk/dialog-recovery.blp',
+    'gtk/done.blp',
+    'gtk/layout-preferences.blp',
+    'gtk/layout-yes-no.blp',
+    'gtk/progress.blp',
+    'gtk/tour.blp',
+    'gtk/widget-choice.blp',
+    'gtk/widget-choice-expander.blp',
+    'gtk/widget-disk.blp',
+    'gtk/widget-keyboard.blp',
+    'gtk/widget-language.blp',
+    'gtk/widget-partition.blp',
+    'gtk/widget-partition-row.blp',
+    'gtk/widget-timezone.blp',
+    'gtk/window.blp',
+    'gtk/window-cpu.blp',
+    'gtk/window-ram.blp',
+    'gtk/window-unsupported.blp',
+    'gtk/wireless-row.blp',
+  ),
+  output: '.',
+  command: [
+    blueprint_compiler,
+    'batch-compile',
+    '@OUTPUT@',
+    '@CURRENT_SOURCE_DIR@',
+    '@INPUT@',
+  ],
+)
+
 gnome.compile_resources('tuna-installer',
   'tuna-installer.gresource.xml',
   gresource_bundle: true,
   install: true,
   install_dir: pkgdatadir,
+  dependencies: blueprints,
 )
 
 python = import('python')

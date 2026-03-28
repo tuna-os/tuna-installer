@@ -1,0 +1,26 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDialog: Adw.Window {
+  title: _("Showing Information");
+  default-width: 500;
+  modal: true;
+
+  Box {
+    orientation: vertical;
+
+    Adw.HeaderBar {
+      styles [
+        "flat",
+      ]
+    }
+
+    Label label_text {
+      margin-top: 10;
+      margin-start: 10;
+      margin-end: 10;
+      margin-bottom: 20;
+      wrap: true;
+    }
+  }
+}

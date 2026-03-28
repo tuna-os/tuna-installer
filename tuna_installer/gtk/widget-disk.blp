@@ -1,0 +1,14 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDefaultDiskEntry: Adw.ActionRow {
+  title: "/dev/unit";
+  subtitle: "-1 GB";
+
+  [prefix]
+  CheckButton chk_button {
+    valign: center;
+  }
+
+  activatable-widget: chk_button;
+}

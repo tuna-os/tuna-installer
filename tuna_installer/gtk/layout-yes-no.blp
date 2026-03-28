@@ -1,0 +1,55 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaLayoutYesNo: Adw.Bin {
+  halign: fill;
+  valign: fill;
+  hexpand: true;
+
+  Adw.StatusPage status_page {
+    halign: fill;
+    valign: fill;
+    hexpand: true;
+
+    Box {
+      orientation: vertical;
+      vexpand: true;
+      hexpand: true;
+      valign: center;
+
+      Box {
+        valign: center;
+        spacing: 10;
+        halign: center;
+
+        Button btn_no {
+          label: "No";
+          halign: center;
+
+          styles [
+            "pill",
+          ]
+        }
+
+        Button btn_yes {
+          label: _("Enable");
+          halign: center;
+
+          styles [
+            "pill",
+            "suggested-action",
+          ]
+        }
+
+        Button btn_info {
+          icon-name: "dialog-information-symbolic";
+          visible: false;
+
+          styles [
+            "flat",
+          ]
+        }
+      }
+    }
+  }
+}

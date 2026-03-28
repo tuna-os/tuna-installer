@@ -1,0 +1,107 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDefaultKeyboard: Adw.Bin {
+  hexpand: true;
+  vexpand: true;
+
+  Box {
+    vexpand: true;
+    hexpand: true;
+    orientation: vertical;
+
+    Box empty_box {
+      visible: false;
+    }
+
+    Overlay {
+      valign: center;
+
+      [overlay]
+      Button btn_next {
+        sensitive: false;
+        margin-end: 12;
+        margin-start: 12;
+        margin-top: 52;
+        icon-name: "go-next-symbolic";
+        halign: end;
+        valign: center;
+        tooltip-text: _("Next");
+
+        styles [
+          "circular",
+          "suggested-action",
+        ]
+      }
+
+      Adw.StatusPage status_page {
+        hexpand: true;
+        vexpand: true;
+        icon-name: "input-keyboard-symbolic";
+        title: _("Keyboard Layout");
+        description: _("Select your preferred keyboard layout");
+
+        Adw.Clamp {
+          maximum-size: 600;
+
+          Box {
+            orientation: vertical;
+
+            SearchEntry entry_search_keyboard {
+              hexpand: true;
+              placeholder-text: _("Search keyboard layouts");
+            }
+
+            Adw.PreferencesGroup {
+              ListBox all_keyboards_group {
+                styles [
+                  "boxed-list",
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+
+    Stack keyboard_footer {
+      vhomogeneous: false;
+
+      StackPage {
+        name: "keyboard_footer";
+
+        child: Box {
+          orientation: vertical;
+
+          Separator {
+            orientation: horizontal;
+          }
+
+          Adw.Clamp {
+            maximum-size: 615;
+
+            Adw.PreferencesGroup {
+              margin-top: 6;
+              margin-bottom: 6;
+              margin-start: 6;
+              margin-end: 6;
+
+              Adw.EntryRow entry_test {
+                title: "Test your keyboard";
+              }
+            }
+          }
+        };
+      }
+    }
+  }
+}
+
+SizeGroup {
+  mode: both;
+
+  widgets [
+    empty_box,
+    keyboard_footer,
+  ]
+}

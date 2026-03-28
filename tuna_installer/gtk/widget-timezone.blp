@@ -1,0 +1,16 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $TimezoneRow: Adw.ActionRow {
+  [prefix]
+  CheckButton select_button {}
+
+  activatable-widget: select_button;
+
+  [suffix]
+  Label country_label {
+    styles [
+      "dim-label",
+    ]
+  }
+}

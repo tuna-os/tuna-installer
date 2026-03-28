@@ -1,0 +1,84 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDefaultImage: Adw.Bin {
+  halign: fill;
+  valign: fill;
+  hexpand: true;
+  vexpand: true;
+
+  Overlay {
+    valign: center;
+
+    [overlay]
+    Button btn_next {
+      margin-end: 12;
+      margin-start: 12;
+      icon-name: "go-next-symbolic";
+      halign: end;
+      valign: center;
+      tooltip-text: _("Next");
+      sensitive: false;
+
+      styles [
+        "circular",
+        "suggested-action",
+      ]
+    }
+
+    Adw.StatusPage {
+      icon-name: "media-optical-symbolic";
+      title: _("Choose an Image");
+      description: _("Select a TunaOS image to install, or enter a custom bootc-compatible image URL.");
+
+      Box {
+        orientation: vertical;
+        spacing: 12;
+        hexpand: true;
+        margin-start: 18;
+        margin-end: 18;
+        margin-bottom: 72;
+
+        SearchEntry search_entry {
+          hexpand: true;
+          placeholder-text: _("Search images…");
+        }
+
+        ScrolledWindow {
+          hexpand: true;
+          vexpand: true;
+          min-content-height: 260;
+          max-content-height: 420;
+          has-frame: false;
+
+          ListBox list_images {
+            selection-mode: single;
+            hexpand: true;
+
+            styles [
+              "boxed-list",
+            ]
+          }
+        }
+
+        ListBox list_custom {
+          selection-mode: none;
+          hexpand: true;
+
+          styles [
+            "boxed-list",
+          ]
+
+          Adw.ExpanderRow row_custom {
+            title: _("Custom bootc image");
+            subtitle: _("Enter any OCI image reference");
+
+            Adw.EntryRow image_url_entry {
+              title: _("Image URL");
+            }
+          }
+        }
+      }
+    }
+  }
+}

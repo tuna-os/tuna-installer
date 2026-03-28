@@ -1,0 +1,53 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDefaultLanguage: Adw.Bin {
+  hexpand: true;
+
+  Overlay {
+    valign: center;
+
+    [overlay]
+    Button btn_next {
+      sensitive: false;
+      margin-end: 12;
+      margin-start: 12;
+      icon-name: "go-next-symbolic";
+      halign: end;
+      valign: center;
+      tooltip-text: _("Next");
+
+      styles [
+        "circular",
+        "suggested-action",
+      ]
+    }
+
+    Adw.StatusPage status_page {
+      icon-name: "preferences-desktop-locale-symbolic";
+      title: _("Language");
+      description: _("Select your language");
+
+      Adw.Clamp {
+        maximum-size: 600;
+
+        Box {
+          orientation: vertical;
+
+          SearchEntry entry_search_language {
+            hexpand: true;
+            placeholder-text: _("Search languages");
+          }
+
+          Adw.PreferencesGroup {
+            ListBox all_languages_group {
+              styles [
+                "boxed-list",
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

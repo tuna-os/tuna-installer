@@ -1,0 +1,73 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaWindow: Adw.ApplicationWindow {
+  default-width: 900;
+  default-height: 680;
+  title: _("TunaOS Installer");
+  deletable: false;
+
+  Adw.Bin {
+    child: Adw.ToolbarView {
+      [top]
+      Adw.HeaderBar {
+        show-end-title-buttons: false;
+
+        [start]
+        Button btn_back {
+          visible: false;
+          icon-name: "go-previous-symbolic";
+          tooltip-text: _("Back");
+
+          styles [
+            "flat",
+          ]
+        }
+
+        title-widget: Adw.CarouselIndicatorDots carousel_indicator_dots {
+          carousel: carousel;
+          orientation: horizontal;
+          visible: false;
+        };
+
+        [end]
+        Button btn_exit {
+          icon-name: "window-close-symbolic";
+          tooltip-text: _("Exit Installer");
+
+          styles [
+            "flat",
+          ]
+        }
+
+        [end]
+        Button btn_next {
+          visible: false;
+          icon-name: "go-next-symbolic";
+          tooltip-text: _("Next");
+
+          styles [
+            "suggested-action",
+          ]
+        }
+      }
+
+      content: Box {
+        orientation: horizontal;
+        vexpand: true;
+        hexpand: true;
+
+        Adw.ToastOverlay toasts {
+          Adw.Carousel carousel {
+            vexpand: true;
+            hexpand: true;
+            allow-scroll-wheel: false;
+            allow-mouse-drag: false;
+            allow-long-swipes: false;
+            interactive: false;
+          }
+        }
+      };
+    };
+  }
+}

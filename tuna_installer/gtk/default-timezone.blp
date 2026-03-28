@@ -1,0 +1,87 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDefaultTimezone: Adw.Bin {
+  hexpand: true;
+
+  Box {
+    orientation: vertical;
+
+    Overlay {
+      valign: center;
+
+      [overlay]
+      Button btn_next {
+        sensitive: false;
+        margin-end: 12;
+        margin-start: 12;
+        icon-name: "go-next-symbolic";
+        halign: end;
+        valign: center;
+        tooltip-text: _("Next");
+
+        styles [
+          "circular",
+          "suggested-action",
+        ]
+      }
+
+      Adw.StatusPage status_page {
+        icon-name: "preferences-system-time-symbolic";
+        title: _("Date & Time");
+        description: _("Select your preferred timezone");
+
+        Adw.Clamp {
+          maximum-size: 600;
+
+          Box {
+            orientation: vertical;
+
+            SearchEntry entry_search_timezone {
+              hexpand: true;
+              placeholder-text: _("Search timezones");
+            }
+
+            Adw.PreferencesGroup all_timezones_group {}
+          }
+        }
+      }
+    }
+
+    Stack {
+      vhomogeneous: false;
+
+      StackPage {
+        name: "current_tz_footer";
+
+        child: Box {
+          orientation: vertical;
+
+          Separator {
+            orientation: horizontal;
+          }
+
+          Box {
+            orientation: horizontal;
+            halign: center;
+            spacing: 10;
+            margin-top: 10;
+            margin-bottom: 10;
+
+            Label {
+              label: _("Current timezone: ");
+            }
+
+            Label current_tz_label {
+              styles [
+                "heading",
+              ]
+            }
+
+            Label current_location_label {}
+          }
+        };
+      }
+    }
+  }
+}

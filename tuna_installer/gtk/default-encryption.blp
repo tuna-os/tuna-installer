@@ -1,0 +1,60 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDefaultEncryption: Adw.Bin {
+  halign: fill;
+  valign: fill;
+  hexpand: true;
+
+  Overlay {
+    valign: center;
+
+    [overlay]
+    Button btn_next {
+      margin-end: 12;
+      margin-start: 12;
+      icon-name: "go-next-symbolic";
+      halign: end;
+      valign: center;
+      tooltip-text: _("Next");
+
+      styles [
+        "circular",
+        "suggested-action",
+      ]
+    }
+
+    Adw.StatusPage status_page {
+      icon-name: "channel-secure-symbolic";
+      title: _("Device Encryption");
+      description: _("Encrypting your disk protects your personal information");
+
+      Adw.PreferencesPage {
+        Adw.PreferencesGroup {
+          Adw.ActionRow {
+            title: _("Encrypt Device");
+            subtitle: _("Use a memorable password to encrypt your data");
+
+            [suffix]
+            Switch use_encryption_switch {
+              valign: center;
+              active: true;
+            }
+
+            activatable-widget: use_encryption_switch;
+          }
+
+          Adw.PasswordEntryRow encryption_pass_entry {
+            title: _("Password");
+            sensitive: bind use_encryption_switch.active;
+          }
+
+          Adw.PasswordEntryRow encryption_pass_entry_confirm {
+            title: _("Confirm Password");
+            sensitive: bind use_encryption_switch.active;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,46 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDefaultDiskConfirmModal: Adw.Window {
+  title: _("Confirm Changes");
+  modal: true;
+  deletable: false;
+  default-width: 500;
+  default-height: 650;
+
+  Box {
+    orientation: vertical;
+
+    Adw.HeaderBar {
+      [start]
+      Button btn_cancel {
+        label: _("Cancel");
+      }
+    }
+
+    Adw.StatusPage {
+      title: _("Confirm Changes");
+      description: _("The following changes will be made to your disk. Please review them carefully.");
+
+      Box {
+        orientation: vertical;
+        spacing: 20;
+
+        Adw.PreferencesPage {
+          Adw.PreferencesGroup group_partitions {}
+        }
+
+        Button btn_apply {
+          label: _("Confirm Changes");
+          valign: center;
+          halign: center;
+
+          styles [
+            "destructive-action",
+            "pill",
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,107 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaRecoveryDialog: Adw.Window {
+  title: _("Recovery");
+  default-width: 500;
+  modal: true;
+
+  Box {
+    orientation: vertical;
+
+    Adw.HeaderBar {
+      styles [
+        "flat",
+      ]
+    }
+
+    Adw.PreferencesPage {
+      Adw.PreferencesGroup {
+        Adw.ActionRow row_console {
+          icon-name: "utilities-terminal-symbolic";
+          title: _("Console");
+          subtitle: _("Open a terminal");
+          activatable: true;
+
+          [suffix]
+          Image {
+            icon-name: "go-next-symbolic";
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+
+        Adw.ActionRow row_documentation {
+          icon-name: "folder-documents-symbolic";
+          title: _("Documentation");
+          subtitle: _("Open the Vanilla OS documentation");
+          activatable: true;
+
+          [suffix]
+          Image {
+            icon-name: "go-next-symbolic";
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+
+        Adw.ActionRow row_gparted {
+          icon-name: "drive-harddisk-symbolic";
+          title: _("GParted");
+          subtitle: _("Manage disks and partitions");
+          activatable: true;
+
+          [suffix]
+          Image {
+            icon-name: "go-next-symbolic";
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+
+        Adw.ActionRow row_handbook {
+          icon-name: "accessories-dictionary-symbolic";
+          title: _("Handbook");
+          subtitle: _("Read tutorials and guides about Vanilla OS");
+          activatable: true;
+
+          [suffix]
+          Image {
+            icon-name: "go-next-symbolic";
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+
+        Adw.ActionRow row_web {
+          icon-name: "web-browser-symbolic";
+          title: _("Web Browser");
+          subtitle: _("Search help online");
+          activatable: true;
+
+          [suffix]
+          Image {
+            icon-name: "go-next-symbolic";
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+      }
+    }
+  }
+}

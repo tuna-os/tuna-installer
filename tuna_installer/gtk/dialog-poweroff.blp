@@ -1,0 +1,70 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaPoweroffDialog: Adw.Window {
+  title: _("Power Off");
+  default-width: 500;
+  modal: true;
+
+  Box {
+    orientation: vertical;
+
+    Adw.HeaderBar {
+      styles [
+        "flat",
+      ]
+    }
+
+    Adw.PreferencesPage {
+      Adw.PreferencesGroup {
+        Adw.ActionRow row_poweroff {
+          icon-name: "system-shutdown-symbolic";
+          title: _("Power Off");
+          activatable: true;
+
+          [suffix]
+          Image {
+            icon-name: "go-next-symbolic";
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+
+        Adw.ActionRow row_reboot {
+          icon-name: "system-reboot-symbolic";
+          title: _("Restart");
+          activatable: true;
+
+          [suffix]
+          Image {
+            icon-name: "go-next-symbolic";
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+
+        Adw.ActionRow row_firmware_setup {
+          icon-name: "application-x-executable-symbolic";
+          title: _("Restart Into Firmware Setup");
+          activatable: true;
+
+          [suffix]
+          Image {
+            icon-name: "go-next-symbolic";
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+      }
+    }
+  }
+}

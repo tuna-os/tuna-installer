@@ -1,0 +1,63 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaRamWindow: Adw.Window {
+  default-width: 800;
+  default-height: 600;
+  deletable: false;
+
+  Box {
+    orientation: vertical;
+    valign: center;
+    spacing: 24;
+
+    Adw.Clamp {
+      maximum-size: 450;
+
+      Picture {
+        file: "resource:///org/vanillaos/Installer/assets/unsupported.svg";
+        can-shrink: false;
+      }
+    }
+
+    Box {
+      orientation: vertical;
+      valign: center;
+      spacing: 12;
+
+      Label title_label {
+        wrap: true;
+        wrap-mode: word_char;
+        justify: center;
+        label: "Not Enough RAM";
+
+        styles [
+          "title",
+          "title-1",
+        ]
+      }
+
+      Label description_label {
+        wrap: true;
+        wrap-mode: word_char;
+        justify: center;
+
+        styles [
+          "body",
+          "description",
+        ]
+      }
+    }
+
+    Button btn_continue {
+      margin-top: 12;
+      label: _("Continue...");
+      halign: center;
+
+      styles [
+        "suggested-action",
+        "pill",
+      ]
+    }
+  }
+}

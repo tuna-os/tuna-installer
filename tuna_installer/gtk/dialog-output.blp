@@ -1,0 +1,34 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDialogOutput: Adw.Window {
+  title: _("Log");
+  modal: true;
+  default-width: 500;
+  default-height: 500;
+
+  Adw.Bin {
+    child: Adw.ToolbarView {
+      [top]
+      Adw.HeaderBar {}
+
+      content: Adw.Bin {
+        margin-top: 6;
+        margin-bottom: 12;
+        margin-start: 12;
+        margin-end: 12;
+
+        styles [
+          "card",
+        ]
+
+        Box main_box {
+          margin-top: 6;
+          margin-bottom: 6;
+          margin-start: 6;
+          margin-end: 6;
+        }
+      };
+    };
+  }
+}

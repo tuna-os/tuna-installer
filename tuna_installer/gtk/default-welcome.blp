@@ -1,0 +1,78 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $VanillaDefaultWelcome: Adw.Bin {
+  halign: fill;
+  valign: fill;
+  hexpand: true;
+
+  Adw.StatusPage status_page {
+    Adw.PreferencesPage {
+      Adw.PreferencesGroup {
+        Adw.ActionRow row_install {
+          title: _("Install");
+          icon-name: "folder-download-symbolic";
+          activatable: true;
+
+          Image {
+            icon-name: "go-next-symbolic";
+            halign: center;
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+
+        Adw.ActionRow row_install_custom {
+          title: _("Install Custom Image (Advanced)");
+          icon-name: "media-optical-cd-audio-symbolic";
+          activatable: true;
+
+          Image {
+            icon-name: "go-next-symbolic";
+            halign: center;
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+
+        Adw.ActionRow row_recovery {
+          title: _("Recovery");
+          icon-name: "emoji-symbols-symbolic";
+          activatable: true;
+
+          Image {
+            icon-name: "go-next-symbolic";
+            halign: center;
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+
+        Adw.ActionRow row_poweroff {
+          title: _("Power Off");
+          icon-name: "system-shutdown-symbolic";
+          activatable: true;
+
+          Image {
+            icon-name: "go-next-symbolic";
+            halign: center;
+            valign: center;
+
+            styles [
+              "flat",
+            ]
+          }
+        }
+      }
+    }
+  }
+}

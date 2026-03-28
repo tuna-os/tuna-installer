@@ -1,0 +1,20 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $LanguageRow: Adw.ActionRow {
+  [prefix]
+  CheckButton select_button {}
+
+  activatable-widget: select_button;
+
+  [suffix]
+  Label suffix_bin {
+    justify: center;
+    label: _("Language");
+
+    styles [
+      "monospace",
+      "dim-label",
+    ]
+  }
+}

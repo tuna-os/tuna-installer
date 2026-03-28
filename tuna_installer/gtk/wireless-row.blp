@@ -1,0 +1,38 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $WirelessRow: Adw.ActionRow {
+  use-markup: false;
+
+  [prefix]
+  Overlay {
+    vexpand: false;
+    hexpand: false;
+    margin-end: 10;
+
+    Image signal_icon {
+      icon-name: "network-wireless-no-route-symbolic";
+    }
+
+    [overlay]
+    Image secure_icon {
+      valign: end;
+      halign: start;
+      margin-start: 10;
+      margin-bottom: 12;
+      icon-name: "network-wireless-encrypted-symbolic";
+      pixel-size: 10;
+      visible: false;
+    }
+  }
+
+  [suffix]
+  Label connected_label {
+    styles [
+      "dim-label",
+    ]
+
+    label: _("Connected");
+    visible: false;
+  }
+}
