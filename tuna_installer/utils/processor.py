@@ -77,15 +77,15 @@ class Processor:
             use_enc = enc_info.get("use_encryption", False)
             if use_enc:
                 key = enc_info.get("encryption_key", "")
-                if key:
+                explicit_type = enc_info.get("type", "")
+                if explicit_type in ("luks-passphrase", "tpm2-luks-passphrase", "tpm2-luks"):
+                    encryption_type = explicit_type
+                    encryption_passphrase = key
+                elif key:
                     encryption_type = "luks-passphrase"
                     encryption_passphrase = key
                 else:
                     encryption_type = "tpm2-luks"
-            if "type" in enc_info:
-                encryption_type = enc_info["type"]
-            if "passphrase" in enc_info:
-                encryption_passphrase = enc_info["passphrase"]
 
         # --- Image / OCI ref ---
         # In Flatpak mode: finals contain "selected_image" or "custom_image" from the UI.
