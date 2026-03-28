@@ -34,7 +34,7 @@ template $VanillaDefaultEncryption: Adw.Bin {
         Adw.PreferencesGroup {
           Adw.ActionRow {
             title: _("Encrypt Device");
-            subtitle: _("Use a memorable password to encrypt your data");
+            subtitle: _("Protect your data with a password");
 
             [suffix]
             Switch use_encryption_switch {
@@ -53,6 +53,19 @@ template $VanillaDefaultEncryption: Adw.Bin {
           Adw.PasswordEntryRow encryption_pass_entry_confirm {
             title: _("Confirm Password");
             sensitive: bind use_encryption_switch.active;
+          }
+
+          Adw.ActionRow {
+            title: _("TPM2 Auto-unlock");
+            subtitle: _("Also unlock automatically on this hardware; password remains as fallback");
+            sensitive: bind use_encryption_switch.active;
+
+            [suffix]
+            Switch tpm2_switch {
+              valign: center;
+            }
+
+            activatable-widget: tpm2_switch;
           }
         }
       }

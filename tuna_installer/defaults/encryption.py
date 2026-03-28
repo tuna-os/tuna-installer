@@ -26,6 +26,7 @@ class VanillaDefaultEncryption(Adw.Bin):
     status_page = Gtk.Template.Child()
 
     use_encryption_switch = Gtk.Template.Child()
+    tpm2_switch = Gtk.Template.Child()
 
     encryption_pass_entry = Gtk.Template.Child()
     encryption_pass_entry_confirm = Gtk.Template.Child()
@@ -43,6 +44,7 @@ class VanillaDefaultEncryption(Adw.Bin):
         self.btn_next.connect("clicked", self.__window.next)
         self.use_encryption_switch.connect(
             "state-set", self.__on_encryption_switch_set)
+        self.tpm2_switch.connect("state-set", self.__on_tpm2_switch_set)
         self.encryption_pass_entry.connect(
             "changed", self.__on_password_changed)
         self.encryption_pass_entry_confirm.connect(
@@ -54,13 +56,20 @@ class VanillaDefaultEncryption(Adw.Bin):
     def test_auto_advance(self):
         # Ensure encryption is off — TPM2 won't work on virtual/loop disks
         self.use_encryption_switch.set_active(False)
+        self.tpm2_switch.set_active(False)
         self.btn_next.emit("clicked")
 
     def get_finals(self):
+        use_enc = self.use_encryption_switch.get_active()
+        if not use_enc:
+            return {"encryption": {"use_encryption": False, "encryption_key": ""}}
+        passphrase = self.encryption_pass_entry.get_text()
+        enc_type = "tpm2-luks-passphrase" if self.tpm2_switch.get_active() else "luks-passphrase"
         return {
             "encryption": {
-                "use_encryption": self.use_encryption_switch.get_active(),
-                "encryption_key": self.encryption_pass_entry.get_text(),
+                "use_encryption": True,
+                "type": enc_type,
+                "encryption_key": passphrase,
             }
         }
 
@@ -69,7 +78,11 @@ class VanillaDefaultEncryption(Adw.Bin):
             self.status_page.set_icon_name("changes-prevent-symbolic")
         else:
             self.status_page.set_icon_name("changes-allow-symbolic")
+            self.tpm2_switch.set_active(False)
 
+        self.__update_btn_next()
+
+    def __on_tpm2_switch_set(self, state, user_data):
         self.__update_btn_next()
 
     def __on_password_changed(self, *args):
@@ -87,5 +100,6 @@ class VanillaDefaultEncryption(Adw.Bin):
         self.__update_btn_next()
 
     def __update_btn_next(self):
-        rule = self.password_filled or self.use_encryption_switch.get_active() is False
+        use_enc = self.use_encryption_switch.get_active()
+        rule = not use_enc or self.password_filled
         self.btn_next.set_sensitive(rule)
