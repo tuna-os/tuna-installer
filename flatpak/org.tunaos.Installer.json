@@ -75,40 +75,6 @@
       ]
     },
     {
-      "name": "python3-requests",
-      "buildsystem": "simple",
-      "build-commands": [
-        "pip3 install --no-index --find-links=. --prefix=/app requests"
-      ],
-      "sources": [
-        {
-          "type": "file",
-          "url": "https://files.pythonhosted.org/packages/f9/9b/335f9764261e915ed497fcdeb11df5dfd6f7bf257d4a6a2a686d80da4d54/requests-2.32.3-py3-none-any.whl",
-          "sha256": "70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"
-        },
-        {
-          "type": "file",
-          "url": "https://files.pythonhosted.org/packages/63/09/c1bc53dab74b1816a00d8d030de5bf98f724c52c1635e07681d312f20be8/certifi-2024.12.14-py3-none-any.whl",
-          "sha256": "1275f7a45be9464efc1173084eaa30f866fe2e47d389406136d332ed4967ec5c"
-        },
-        {
-          "type": "file",
-          "url": "https://files.pythonhosted.org/packages/d1/d9/bb22719afa4104f0b3a84deddfa5e8b2d99bed68c73ff21e32670a1e2f5c/charset_normalizer-3.4.1-py3-none-any.whl",
-          "sha256": "d98b1668f06378c6dbefec3b92299716b931cd4e6061f3c875a71ced1780ab85"
-        },
-        {
-          "type": "file",
-          "url": "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl",
-          "sha256": "946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3"
-        },
-        {
-          "type": "file",
-          "url": "https://files.pythonhosted.org/packages/d4/70/d60450c3dd48ef87586924207ae8907090de0b306af2bce5d134d78615cb/urllib3-2.3.0-py3-none-any.whl",
-          "sha256": "1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df"
-        }
-      ]
-    },
-    {
       "name": "tuna-installer",
       "buildsystem": "meson",
       "config-opts": [
