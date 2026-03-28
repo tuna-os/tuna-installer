@@ -2,8 +2,39 @@
     "log_file": "/var/log/tuna-installer.log",
     "distro_name": "TunaOS",
     "distro_logo": "org.tunaos.Installer",
-    "imgref": "ghcr.io/tuna-os/yellowfin:gnome-hwe",
-    "targetImgref": "ostree-remote-registry:tunaos:ghcr.io/tuna-os/yellowfin:gnome-hwe",
+    "images": [
+        {
+            "name": "Albacore",
+            "id": "albacore",
+            "imgref": "ghcr.io/tuna-os/albacore:latest",
+            "description": "Minimal base image"
+        },
+        {
+            "name": "Yellowfin",
+            "id": "yellowfin",
+            "imgref": "ghcr.io/tuna-os/yellowfin:gnome-hwe",
+            "description": "GNOME desktop with HWE kernel",
+            "default": true
+        },
+        {
+            "name": "Skipjack",
+            "id": "skipjack",
+            "imgref": "ghcr.io/tuna-os/skipjack:latest",
+            "description": "KDE Plasma desktop"
+        },
+        {
+            "name": "Bonito",
+            "id": "bonito",
+            "imgref": "ghcr.io/tuna-os/bonito:latest",
+            "description": "Developer-focused image"
+        },
+        {
+            "name": "Redfin",
+            "id": "redfin",
+            "imgref": "ghcr.io/tuna-os/redfin:latest",
+            "description": "Gaming-optimised image"
+        }
+    ],
     "tour": {
         "welcome": {
             "resource": "/org/tunaos/Installer/assets/welcome.png",

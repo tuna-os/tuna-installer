@@ -25,17 +25,27 @@
         </child>
         <child>
           <object class="AdwStatusPage" id="status_page">
-            <property name="icon-name">image-missing-symbolic</property>
-            <property name="title" translatable="yes">Custom Image</property>
-            <property name="description" translatable="yes">Enter the URL of the custom image below. Note that custom images have full access to your system. Only install images from authors you trust.</property>
+            <property name="icon-name">media-optical-symbolic</property>
+            <property name="title" translatable="yes">Choose an Image</property>
+            <property name="description" translatable="yes">Select a TunaOS image to install, or enter a custom bootc-compatible image URL.</property>
             <child>
               <object class="AdwPreferencesPage">
                 <child>
+                  <object class="AdwPreferencesGroup" id="group_images">
+                    <property name="title" translatable="yes">TunaOS Images</property>
+                  </object>
+                </child>
+                <child>
                   <object class="AdwPreferencesGroup">
                     <child>
-                      <object class="AdwEntryRow" id="image_url_entry">
-                        <property name="title" translatable="yes">URL</property>
-                        <property name="text" translatable="yes">ghcr.io/vanilla-os/desktop:main</property>
+                      <object class="AdwExpanderRow" id="row_custom">
+                        <property name="title" translatable="yes">Custom bootc image</property>
+                        <property name="subtitle" translatable="yes">Enter any OCI image reference</property>
+                        <child>
+                          <object class="AdwEntryRow" id="image_url_entry">
+                            <property name="title" translatable="yes">Image URL</property>
+                          </object>
+                        </child>
                       </object>
                     </child>
                   </object>

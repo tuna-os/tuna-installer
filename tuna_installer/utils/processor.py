@@ -88,15 +88,23 @@ class Processor:
                 encryption_passphrase = enc_info["passphrase"]
 
         # --- Image / OCI ref ---
-        image = merged.get("custom_image", "")
+        # In Flatpak mode: finals contain "selected_image" or "custom_image" from the UI.
+        # In live ISO mode: the image step is skipped; recipe["imgref"] holds the local image.
+        image = merged.get("custom_image", "") or merged.get("selected_image", "")
         if not image:
             image = sys_recipe.get("imgref", "")
         if not image:
-            image = sys_recipe.get("image", "")
+            # Fall back to first default-marked image in the recipe images list
+            for img in sys_recipe.get("images", []):
+                if img.get("default", False):
+                    image = img.get("imgref", "")
+                    break
+        if not image and sys_recipe.get("images"):
+            image = sys_recipe["images"][0].get("imgref", "")
         if not image:
             logger.warning("No image/imgref found in finals or sys_recipe!")
 
-        target_imgref = sys_recipe.get("targetImgref", "")
+        target_imgref = f"docker://{image}" if image else ""
 
         # --- Hostname ---
         hostname = merged.get("hostname", sys_recipe.get("hostname", "tunaos"))

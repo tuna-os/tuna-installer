@@ -17,6 +17,7 @@
 import json
 import logging
 import os
+import subprocess
 import sys
 from gettext import gettext as _
 
@@ -45,8 +46,56 @@ class RecipeLoader:
                 with open(path, "r") as f:
                     self.__recipe = json.load(f)
                 if self.__validate():
+                    self.__enrich()
                     return
                 logger.warning(f"Recipe at {path} failed validation, trying next...")
+
+        logger.error(f"No valid recipe found. Tried: {self.recipe_paths}")
+        sys.exit(1)
+
+    def __enrich(self):
+        """Post-load enrichment: detect live ISO mode and inject local bootc image."""
+        in_flatpak = os.path.exists("/.flatpak-info")
+        is_ostree_booted = os.path.exists("/run/ostree-booted")
+        live_iso_mode = not in_flatpak and is_ostree_booted
+
+        if live_iso_mode:
+            imgref = self.__recipe.get("imgref", "") or self.__detect_local_bootc_image()
+            if imgref:
+                logger.info(f"Live ISO mode: using local bootc image {imgref}")
+                self.__recipe["imgref"] = imgref
+            else:
+                logger.warning("Live ISO mode: could not detect local bootc image")
+
+            # Remove the image selection step — use the local image silently
+            self.__recipe["steps"].pop("image", None)
+            logger.info("Live ISO mode: image selection step removed")
+        else:
+            logger.info("Flatpak/normal mode: image selection enabled")
+
+    def __detect_local_bootc_image(self) -> str:
+        """Run bootc status to find the currently booted image reference."""
+        try:
+            result = subprocess.run(
+                ["bootc", "status", "--format", "json"],
+                capture_output=True, text=True, timeout=10
+            )
+            if result.returncode == 0:
+                data = json.loads(result.stdout)
+                # bootc status JSON: .status.booted.image.image.image
+                imgref = (
+                    data.get("status", {})
+                        .get("booted", {})
+                        .get("image", {})
+                        .get("image", {})
+                        .get("image", "")
+                )
+                if imgref:
+                    logger.info(f"Detected local bootc image via bootc status: {imgref}")
+                    return imgref
+        except Exception as e:
+            logger.warning(f"bootc status failed: {e}")
+        return ""
 
         logger.error(f"No valid recipe found. Tried: {self.recipe_paths}")
         sys.exit(1)
