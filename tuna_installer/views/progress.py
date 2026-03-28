@@ -31,27 +31,31 @@ _LIVE_ISO = not _IN_FLATPAK and os.path.exists("/run/ostree-booted")
 # Where to stage fisherman so the host can see it (shared via --filesystem=host)
 _FISHERMAN_CACHE_DIR = os.path.join(os.environ.get("HOME", "/tmp"), ".cache", "tuna-installer")
 _FISHERMAN_HOST_PATH = os.path.join(_FISHERMAN_CACHE_DIR, "fisherman")
+_FISHERMAN_LOG_PATH = os.path.join(_FISHERMAN_CACHE_DIR, "fisherman-output.log")
 
-if _IN_FLATPAK:
-    if os.environ.get("TUNA_TEST"):
-        # Automated tests run without a polkit agent; use sudo via flatpak-spawn.
-        _fisherman_src = os.environ.get("TUNA_FISHERMAN_PATH", "/app/bin/fisherman")
-        _FISHERMAN_CMD = f"flatpak-spawn --host sudo {os.environ.get('TUNA_FISHERMAN_PATH', _FISHERMAN_HOST_PATH)}"
+
+def _fisherman_argv(recipe: str) -> list:
+    """Build the VTE argv that runs fisherman and tees combined output to a log file.
+
+    bash is used so PIPESTATUS preserves fisherman's exit code through the tee pipe.
+    """
+    log = _FISHERMAN_LOG_PATH
+    if _IN_FLATPAK:
+        if os.environ.get("TUNA_TEST"):
+            bin_ = os.environ.get("TUNA_FISHERMAN_PATH", _FISHERMAN_HOST_PATH)
+            runner = f"flatpak-spawn --host sudo {bin_}"
+        else:
+            runner = f"flatpak-spawn --host pkexec {_FISHERMAN_HOST_PATH}"
+    elif _LIVE_ISO:
+        runner = "sudo /usr/local/bin/fisherman"
     else:
-        # Normal Flatpak: stage fisherman to ~/.cache/tuna-installer/fisherman
-        # (visible on host via --filesystem=host), then call via pkexec.
-        # pkexec shows the GNOME polkit authentication dialog.
-        _fisherman_src = os.environ.get("TUNA_FISHERMAN_PATH", "/app/bin/fisherman")
-        _FISHERMAN_CMD = f"flatpak-spawn --host pkexec {_FISHERMAN_HOST_PATH}"
-elif _LIVE_ISO:
-    # Live ISO: fisherman is installed system-wide and the live user has
-    # passwordless sudo via /etc/sudoers.d/tuna-installer (shipped in the ISO).
-    _fisherman_src = "/usr/local/bin/fisherman"
-    _FISHERMAN_CMD = "sudo /usr/local/bin/fisherman"
-else:
-    # Installed system, non-Flatpak (development / direct install)
-    _fisherman_src = "/usr/local/bin/fisherman"
-    _FISHERMAN_CMD = "pkexec /usr/local/bin/fisherman"
+        runner = "pkexec /usr/local/bin/fisherman"
+
+    return [
+        "bash", "-c",
+        f'{runner} "$1" 2>&1 | tee "{log}"; exit "${{PIPESTATUS[0]}}"',
+        "--", recipe,
+    ]
 
 
 def _stage_fisherman_on_host() -> bool:
@@ -60,8 +64,9 @@ def _stage_fisherman_on_host() -> bool:
         return True
 
     os.makedirs(_FISHERMAN_CACHE_DIR, exist_ok=True)
+    fisherman_src = os.environ.get("TUNA_FISHERMAN_PATH", "/app/bin/fisherman")
     try:
-        shutil.copy2(_fisherman_src, _FISHERMAN_HOST_PATH)
+        shutil.copy2(fisherman_src, _FISHERMAN_HOST_PATH)
         os.chmod(_FISHERMAN_HOST_PATH, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
         logger.info(f"Staged fisherman binary to {_FISHERMAN_HOST_PATH}")
         return True
@@ -367,10 +372,20 @@ class VanillaProgress(Gtk.Box):
     def on_vte_child_exited(self, terminal, status, *args):
         terminal.get_parent().remove(terminal)
 
-        # Terminal applications return 0 on success and 1 on failure, so we need
-        # to invert the status to get the correct result.
-        status = not bool(status)
-        self.__window.set_installation_result(status, self.__terminal)
+        # Log the tail of the output file so the fatal error line appears in journald.
+        try:
+            with open(_FISHERMAN_LOG_PATH) as f:
+                lines = f.readlines()
+            for line in lines[-20:]:
+                line = line.strip()
+                if line and not line.startswith("{"):
+                    logger.info(f"Fisherman: {line}")
+        except Exception:
+            pass
+
+        # exit status 0 = success, anything else = failure.
+        success = not bool(status)
+        self.__window.set_installation_result(success, self.__terminal)
 
     def start(self, recipe):
         # If VANILLA_FAKE was passed as argument
@@ -385,7 +400,7 @@ class VanillaProgress(Gtk.Box):
         self.__terminal.spawn_async(
             Vte.PtyFlags.DEFAULT,
             ".",
-            ["sh", "-c", f"{_FISHERMAN_CMD} {recipe}"],
+            _fisherman_argv(recipe),
             None,
             GLib.SpawnFlags.DEFAULT,
             None,

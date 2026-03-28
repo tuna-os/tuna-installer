@@ -16,38 +16,50 @@
           "children": [
             {
               "name": "GNOME",
-              "imgref": "ghcr.io/tuna-os/albacore:gnome",
-              "desc": "GNOME desktop"
-            },
-            {
-              "name": "GNOME \u2014 HWE Kernel",
-              "imgref": "ghcr.io/tuna-os/albacore:gnome-hwe",
-              "desc": "GNOME with Hardware Enablement kernel"
-            },
-            {
-              "name": "GNOME 50",
-              "imgref": "ghcr.io/tuna-os/albacore:gnome50",
-              "desc": "GNOME 50 series"
-            },
-            {
-              "name": "GNOME \u2014 Gaming",
-              "imgref": "ghcr.io/tuna-os/albacore:gnome-gdx",
-              "desc": "GNOME with gaming optimisations"
+              "flatpaks": "https://raw.githubusercontent.com/projectbluefin/common/refs/heads/main/system_files/bluefin/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
+              "children": [
+                {
+                  "name": "GNOME",
+                  "imgref": "ghcr.io/tuna-os/albacore:gnome",
+                  "desc": "GNOME desktop"
+                },
+                {
+                  "name": "GNOME \u2014 HWE Kernel",
+                  "imgref": "ghcr.io/tuna-os/albacore:gnome-hwe",
+                  "desc": "GNOME with Hardware Enablement kernel"
+                },
+                {
+                  "name": "GNOME 50",
+                  "imgref": "ghcr.io/tuna-os/albacore:gnome50",
+                  "desc": "GNOME 50 series"
+                },
+                {
+                  "name": "GNOME \u2014 Gaming",
+                  "imgref": "ghcr.io/tuna-os/albacore:gnome-gdx",
+                  "desc": "GNOME with gaming optimisations"
+                }
+              ]
             },
             {
               "name": "KDE Plasma",
-              "imgref": "ghcr.io/tuna-os/albacore:kde",
-              "desc": "KDE Plasma desktop"
-            },
-            {
-              "name": "KDE Plasma \u2014 HWE Kernel",
-              "imgref": "ghcr.io/tuna-os/albacore:kde-hwe",
-              "desc": "KDE Plasma with Hardware Enablement kernel"
-            },
-            {
-              "name": "KDE Plasma \u2014 Gaming",
-              "imgref": "ghcr.io/tuna-os/albacore:kde-gdx",
-              "desc": "KDE Plasma with gaming optimisations"
+              "flatpaks": "https://raw.githubusercontent.com/get-aurora-dev/common/refs/heads/main/system_files/shared/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
+              "children": [
+                {
+                  "name": "KDE Plasma",
+                  "imgref": "ghcr.io/tuna-os/albacore:kde",
+                  "desc": "KDE Plasma desktop"
+                },
+                {
+                  "name": "KDE Plasma \u2014 HWE Kernel",
+                  "imgref": "ghcr.io/tuna-os/albacore:kde-hwe",
+                  "desc": "KDE Plasma with Hardware Enablement kernel"
+                },
+                {
+                  "name": "KDE Plasma \u2014 Gaming",
+                  "imgref": "ghcr.io/tuna-os/albacore:kde-gdx",
+                  "desc": "KDE Plasma with gaming optimisations"
+                }
+              ]
             },
             {
               "name": "Niri",
@@ -63,38 +75,50 @@
           "children": [
             {
               "name": "GNOME",
-              "imgref": "ghcr.io/tuna-os/yellowfin:gnome",
-              "desc": "GNOME desktop"
-            },
-            {
-              "name": "GNOME \u2014 HWE Kernel",
-              "imgref": "ghcr.io/tuna-os/yellowfin:gnome-hwe",
-              "desc": "GNOME with Hardware Enablement kernel"
-            },
-            {
-              "name": "GNOME 50",
-              "imgref": "ghcr.io/tuna-os/yellowfin:gnome50",
-              "desc": "GNOME 50 series"
-            },
-            {
-              "name": "GNOME \u2014 Gaming",
-              "imgref": "ghcr.io/tuna-os/yellowfin:gnome-gdx",
-              "desc": "GNOME with gaming optimisations"
+              "flatpaks": "https://raw.githubusercontent.com/projectbluefin/common/refs/heads/main/system_files/bluefin/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
+              "children": [
+                {
+                  "name": "GNOME",
+                  "imgref": "ghcr.io/tuna-os/yellowfin:gnome",
+                  "desc": "GNOME desktop"
+                },
+                {
+                  "name": "GNOME \u2014 HWE Kernel",
+                  "imgref": "ghcr.io/tuna-os/yellowfin:gnome-hwe",
+                  "desc": "GNOME with Hardware Enablement kernel"
+                },
+                {
+                  "name": "GNOME 50",
+                  "imgref": "ghcr.io/tuna-os/yellowfin:gnome50",
+                  "desc": "GNOME 50 series"
+                },
+                {
+                  "name": "GNOME \u2014 Gaming",
+                  "imgref": "ghcr.io/tuna-os/yellowfin:gnome-gdx",
+                  "desc": "GNOME with gaming optimisations"
+                }
+              ]
             },
             {
               "name": "KDE Plasma",
-              "imgref": "ghcr.io/tuna-os/yellowfin:kde",
-              "desc": "KDE Plasma desktop"
-            },
-            {
-              "name": "KDE Plasma \u2014 HWE Kernel",
-              "imgref": "ghcr.io/tuna-os/yellowfin:kde-hwe",
-              "desc": "KDE Plasma with Hardware Enablement kernel"
-            },
-            {
-              "name": "KDE Plasma \u2014 Gaming",
-              "imgref": "ghcr.io/tuna-os/yellowfin:kde-gdx",
-              "desc": "KDE Plasma with gaming optimisations"
+              "flatpaks": "https://raw.githubusercontent.com/get-aurora-dev/common/refs/heads/main/system_files/shared/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
+              "children": [
+                {
+                  "name": "KDE Plasma",
+                  "imgref": "ghcr.io/tuna-os/yellowfin:kde",
+                  "desc": "KDE Plasma desktop"
+                },
+                {
+                  "name": "KDE Plasma \u2014 HWE Kernel",
+                  "imgref": "ghcr.io/tuna-os/yellowfin:kde-hwe",
+                  "desc": "KDE Plasma with Hardware Enablement kernel"
+                },
+                {
+                  "name": "KDE Plasma \u2014 Gaming",
+                  "imgref": "ghcr.io/tuna-os/yellowfin:kde-gdx",
+                  "desc": "KDE Plasma with gaming optimisations"
+                }
+              ]
             },
             {
               "name": "Niri",
@@ -110,38 +134,50 @@
           "children": [
             {
               "name": "GNOME",
-              "imgref": "ghcr.io/tuna-os/skipjack:gnome",
-              "desc": "GNOME desktop"
-            },
-            {
-              "name": "GNOME \u2014 HWE Kernel",
-              "imgref": "ghcr.io/tuna-os/skipjack:gnome-hwe",
-              "desc": "GNOME with Hardware Enablement kernel"
-            },
-            {
-              "name": "GNOME 50",
-              "imgref": "ghcr.io/tuna-os/skipjack:gnome50",
-              "desc": "GNOME 50 series"
-            },
-            {
-              "name": "GNOME \u2014 Gaming",
-              "imgref": "ghcr.io/tuna-os/skipjack:gnome-gdx",
-              "desc": "GNOME with gaming optimisations"
+              "flatpaks": "https://raw.githubusercontent.com/projectbluefin/common/refs/heads/main/system_files/bluefin/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
+              "children": [
+                {
+                  "name": "GNOME",
+                  "imgref": "ghcr.io/tuna-os/skipjack:gnome",
+                  "desc": "GNOME desktop"
+                },
+                {
+                  "name": "GNOME \u2014 HWE Kernel",
+                  "imgref": "ghcr.io/tuna-os/skipjack:gnome-hwe",
+                  "desc": "GNOME with Hardware Enablement kernel"
+                },
+                {
+                  "name": "GNOME 50",
+                  "imgref": "ghcr.io/tuna-os/skipjack:gnome50",
+                  "desc": "GNOME 50 series"
+                },
+                {
+                  "name": "GNOME \u2014 Gaming",
+                  "imgref": "ghcr.io/tuna-os/skipjack:gnome-gdx",
+                  "desc": "GNOME with gaming optimisations"
+                }
+              ]
             },
             {
               "name": "KDE Plasma",
-              "imgref": "ghcr.io/tuna-os/skipjack:kde",
-              "desc": "KDE Plasma desktop"
-            },
-            {
-              "name": "KDE Plasma \u2014 HWE Kernel",
-              "imgref": "ghcr.io/tuna-os/skipjack:kde-hwe",
-              "desc": "KDE Plasma with Hardware Enablement kernel"
-            },
-            {
-              "name": "KDE Plasma \u2014 Gaming",
-              "imgref": "ghcr.io/tuna-os/skipjack:kde-gdx",
-              "desc": "KDE Plasma with gaming optimisations"
+              "flatpaks": "https://raw.githubusercontent.com/get-aurora-dev/common/refs/heads/main/system_files/shared/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
+              "children": [
+                {
+                  "name": "KDE Plasma",
+                  "imgref": "ghcr.io/tuna-os/skipjack:kde",
+                  "desc": "KDE Plasma desktop"
+                },
+                {
+                  "name": "KDE Plasma \u2014 HWE Kernel",
+                  "imgref": "ghcr.io/tuna-os/skipjack:kde-hwe",
+                  "desc": "KDE Plasma with Hardware Enablement kernel"
+                },
+                {
+                  "name": "KDE Plasma \u2014 Gaming",
+                  "imgref": "ghcr.io/tuna-os/skipjack:kde-gdx",
+                  "desc": "KDE Plasma with gaming optimisations"
+                }
+              ]
             },
             {
               "name": "Niri",
@@ -157,38 +193,50 @@
           "children": [
             {
               "name": "GNOME",
-              "imgref": "ghcr.io/tuna-os/bonito:gnome",
-              "desc": "GNOME desktop"
-            },
-            {
-              "name": "GNOME \u2014 HWE Kernel",
-              "imgref": "ghcr.io/tuna-os/bonito:gnome-hwe",
-              "desc": "GNOME with Hardware Enablement kernel"
-            },
-            {
-              "name": "GNOME 50",
-              "imgref": "ghcr.io/tuna-os/bonito:gnome50",
-              "desc": "GNOME 50 series"
-            },
-            {
-              "name": "GNOME \u2014 Gaming",
-              "imgref": "ghcr.io/tuna-os/bonito:gnome-gdx",
-              "desc": "GNOME with gaming optimisations"
+              "flatpaks": "https://raw.githubusercontent.com/projectbluefin/common/refs/heads/main/system_files/bluefin/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
+              "children": [
+                {
+                  "name": "GNOME",
+                  "imgref": "ghcr.io/tuna-os/bonito:gnome",
+                  "desc": "GNOME desktop"
+                },
+                {
+                  "name": "GNOME \u2014 HWE Kernel",
+                  "imgref": "ghcr.io/tuna-os/bonito:gnome-hwe",
+                  "desc": "GNOME with Hardware Enablement kernel"
+                },
+                {
+                  "name": "GNOME 50",
+                  "imgref": "ghcr.io/tuna-os/bonito:gnome50",
+                  "desc": "GNOME 50 series"
+                },
+                {
+                  "name": "GNOME \u2014 Gaming",
+                  "imgref": "ghcr.io/tuna-os/bonito:gnome-gdx",
+                  "desc": "GNOME with gaming optimisations"
+                }
+              ]
             },
             {
               "name": "KDE Plasma",
-              "imgref": "ghcr.io/tuna-os/bonito:kde",
-              "desc": "KDE Plasma desktop"
-            },
-            {
-              "name": "KDE Plasma \u2014 HWE Kernel",
-              "imgref": "ghcr.io/tuna-os/bonito:kde-hwe",
-              "desc": "KDE Plasma with Hardware Enablement kernel"
-            },
-            {
-              "name": "KDE Plasma \u2014 Gaming",
-              "imgref": "ghcr.io/tuna-os/bonito:kde-gdx",
-              "desc": "KDE Plasma with gaming optimisations"
+              "flatpaks": "https://raw.githubusercontent.com/get-aurora-dev/common/refs/heads/main/system_files/shared/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
+              "children": [
+                {
+                  "name": "KDE Plasma",
+                  "imgref": "ghcr.io/tuna-os/bonito:kde",
+                  "desc": "KDE Plasma desktop"
+                },
+                {
+                  "name": "KDE Plasma \u2014 HWE Kernel",
+                  "imgref": "ghcr.io/tuna-os/bonito:kde-hwe",
+                  "desc": "KDE Plasma with Hardware Enablement kernel"
+                },
+                {
+                  "name": "KDE Plasma \u2014 Gaming",
+                  "imgref": "ghcr.io/tuna-os/bonito:kde-gdx",
+                  "desc": "KDE Plasma with gaming optimisations"
+                }
+              ]
             },
             {
               "name": "Niri",
@@ -203,6 +251,7 @@
     },
     {
       "name": "Bluefin",
+      "flatpaks": "https://raw.githubusercontent.com/projectbluefin/common/refs/heads/main/system_files/bluefin/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
       "search_extra": "universal blue ublue bluefin gnome developer dx",
       "children": [
         {
@@ -346,6 +395,7 @@
     },
     {
       "name": "Aurora",
+      "flatpaks": "https://raw.githubusercontent.com/get-aurora-dev/common/refs/heads/main/system_files/shared/usr/share/ublue-os/homebrew/system-flatpaks.Brewfile",
       "search_extra": "universal blue ublue aurora kde plasma",
       "children": [
         {

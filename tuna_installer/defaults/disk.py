@@ -790,9 +790,9 @@ class VanillaDefaultDisk(Adw.Bin):
         try:
             logger.info(f"Creating virtual disk image: {img} ({self._VIRTUAL_DISK_SIZE})")
             subprocess.run(["truncate", "-s", self._VIRTUAL_DISK_SIZE, img], check=True)
-            host_run(["sudo", "losetup", "-fP", img], check=True)
+            host_run(["pkexec", "losetup", "-fP", img], check=True)
             out = host_output(
-                ["sudo", "losetup", "--list", "--output", "NAME,BACK-FILE", "--noheadings"],
+                ["losetup", "--list", "--output", "NAME,BACK-FILE", "--noheadings"],
                 text=True,
             )
             for line in out.splitlines():
@@ -807,7 +807,11 @@ class VanillaDefaultDisk(Adw.Bin):
             return None
 
     def get_finals(self):
-        return {"disk": self.__partition_recipe}
+        result = {"disk": self.__partition_recipe}
+        if self.__use_virtual_disk:
+            result["virtual_disk_img"] = self._VIRTUAL_DISK_IMG
+            result["virtual_disk_loop"] = getattr(self, "_VanillaDefaultDisk__loop_device", None)
+        return result
 
     def __on_btn_all_disks(self, widget):
         widget.set_visible(False)
@@ -828,6 +832,7 @@ class VanillaDefaultDisk(Adw.Bin):
             if not loop_dev:
                 logger.error("Virtual disk setup failed")
                 return
+            self.__loop_device = loop_dev
             self.__partition_recipe = {
                 "auto": {
                     "disk": loop_dev,

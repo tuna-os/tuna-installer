@@ -19,6 +19,8 @@ import json
 import logging
 import os
 import re
+import urllib.request
+import urllib.error
 
 from gi.repository import Adw, Gio, Gtk
 
@@ -136,6 +138,28 @@ def _count_leaves(nodes: list) -> int:
 _LEAF_COUNT = _count_leaves(_IMAGE_TREE)
 
 
+def _fetch_brewfile_flatpaks(url: str) -> list[str] | None:
+    """Fetch a Brewfile from a URL and return the list of flatpak app IDs.
+
+    Parses lines of the form:  flatpak "com.example.App"
+    Returns None on network/parse error so the caller can fall back gracefully.
+    """
+    try:
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            text = resp.read().decode("utf-8")
+        apps = []
+        for line in text.splitlines():
+            line = line.strip()
+            m = re.match(r'^flatpak\s+"([^"]+)"', line)
+            if m:
+                apps.append(m.group(1))
+        logger.info(f"Fetched {len(apps)} flatpaks from {url}")
+        return apps if apps else None
+    except Exception as e:
+        logger.warning(f"Could not fetch flatpaks from {url}: {e}")
+        return None
+
+
 def _make_icon(icon_spec: str, size: int = 32) -> "Gtk.Image | None":
     """Return a GtkImage for an icon spec, or None if blank/unresolvable.
 
@@ -225,6 +249,7 @@ class VanillaDefaultImage(Adw.Bin):
     def __build_node(self, parent, node, ancestors, search_ctx, flatpaks_ctx=None, icon_ctx=None):
         """Recursively build ExpanderRow groups and ActionRow leaves."""
         # Inherit flatpaks and icon from nearest ancestor that defines them.
+        # flatpaks may be a list of app IDs or a URL string (fetched at selection time).
         node_flatpaks = node.get("flatpaks", flatpaks_ctx)
         node_icon = node.get("icon", icon_ctx)
 
@@ -300,9 +325,13 @@ class VanillaDefaultImage(Adw.Bin):
     def __on_check_toggled(self, check, imgref, flatpaks, icon):
         if check.get_active():
             self.__selected_imgref = imgref
-            self.__selected_flatpaks = flatpaks
             self.__selected_icon = icon
             self.__selected_pretty_name = _imgref_to_pretty_name(imgref)
+            # flatpaks may be a list of app IDs or a URL string pointing to a Brewfile.
+            if isinstance(flatpaks, str) and flatpaks.startswith("http"):
+                self.__selected_flatpaks = _fetch_brewfile_flatpaks(flatpaks)
+            else:
+                self.__selected_flatpaks = flatpaks
             logger.info(f"Image selected: {imgref} ({self.__selected_pretty_name})")
             if self.row_custom.get_expanded():
                 self.row_custom.set_expanded(False)

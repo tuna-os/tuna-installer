@@ -72,6 +72,7 @@ class VanillaWindow(Adw.ApplicationWindow):
         self.btn_back.connect("clicked", self.back)
         self.btn_next.connect("clicked", self.__on_header_next)
         self.btn_exit.connect("clicked", self.__on_exit_clicked)
+        self.connect("close-request", self.__on_close_request)
         self.carousel.connect("page-changed", self.__on_page_changed)
         # Connect update_finals to whichever step widget was last added to the
         # carousel — this may differ from widgets[-1] when a screen is skipped.
@@ -168,18 +169,19 @@ class VanillaWindow(Adw.ApplicationWindow):
         self.btn_back.set_sensitive(cur_index != 0.0)
         self.carousel_indicator_dots.set_visible(cur_index != 0.0)
 
-        # Sync header btn_next with the current page's btn_next
+        # Sync header btn_next with the current page's btn_next sensitivity only.
+        # Visibility of the per-page btn_next is always false (hidden in favour of
+        # the header button), so we must NOT mirror it — the header btn_next should
+        # always be visible on step pages; only its sensitivity tracks the page.
         if hasattr(page, "btn_next"):
-            self.btn_next.set_visible(page.btn_next.get_visible())
+            self.btn_next.set_visible(True)
             self.btn_next.set_sensitive(page.btn_next.get_sensitive())
 
             def _sync(widget, _param):
-                self.btn_next.set_visible(widget.get_visible())
                 self.btn_next.set_sensitive(widget.get_sensitive())
 
             self.__next_handlers = [
                 page.btn_next.connect("notify::sensitive", _sync),
-                page.btn_next.connect("notify::visible", _sync),
             ]
             self.__next_page_widget = page
         else:
@@ -190,6 +192,10 @@ class VanillaWindow(Adw.ApplicationWindow):
         page = self.carousel.get_nth_page(cur_index)
         if hasattr(page, "btn_next"):
             page.btn_next.emit("clicked")
+
+    def __on_close_request(self, *args):
+        self.__on_exit_clicked()
+        return True  # block the default close; dialog will quit() if confirmed
 
     def __on_exit_clicked(self, *args):
         dialog = Adw.AlertDialog(
