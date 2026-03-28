@@ -5,6 +5,22 @@
     <hr />
 </div>
 
+## Installing
+
+Download the latest Flatpak bundle from the [Continuous Build release](https://github.com/tuna-os/tuna-installer/releases/tag/continuous) and install it:
+
+```bash
+flatpak install --user --bundle org.tunaos.Installer.flatpak
+```
+
+Or in one line with `curl`:
+
+```bash
+curl -Lo tuna-installer.flatpak \
+  https://github.com/tuna-os/tuna-installer/releases/download/continuous/org.tunaos.Installer.flatpak \
+  && flatpak install --user --bundle tuna-installer.flatpak
+```
+
 ## Contributing Images
 
 The installer's image catalog is defined in a single JSON file:
@@ -52,7 +68,7 @@ flatpak run org.tunaos.Installer
 meson setup build
 ninja -C build
 sudo ninja -C build install
-vanilla-installer
+tuna-installer
 ```
 
 ### Dependencies

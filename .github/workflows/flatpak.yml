@@ -12,7 +12,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-49
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
       options: --privileged
 
     steps:
@@ -33,7 +33,17 @@ jobs:
           path: org.tunaos.Installer.flatpak
           retention-days: 30
 
-      - name: Attach bundle to release
+      - name: Publish continuous pre-release (main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: continuous
+          name: Continuous Build
+          prerelease: true
+          body: "Latest build from the `main` branch. Updated automatically on every push."
+          files: org.tunaos.Installer.flatpak
+
+      - name: Attach bundle to tagged release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
