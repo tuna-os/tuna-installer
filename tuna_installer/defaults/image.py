@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, GLib, Gtk
+import os
 import re
 
 @Gtk.Template(resource_path="/org/tunaos/Installer/gtk/default-image.ui")
@@ -39,6 +40,10 @@ class VanillaDefaultImage(Adw.Bin):
         )
 
         self.image_url_filled = False
+        self.__update_btn_next()
+
+    def test_auto_advance(self):
+        self.btn_next.emit("clicked")
 
     def get_finals(self):
         if self.__window.install_mode == 1:
@@ -47,15 +52,19 @@ class VanillaDefaultImage(Adw.Bin):
             return {"default-image": True,}
 
     def __on_url_changed(self, *args):
-        if self.image_url_entry.get_text() and re.match("^(.*/.*:.*)$", self.image_url_entry.get_text()) is not None:
+        url = self.image_url_entry.get_text()
+        if url and re.match("^(.*/.*:.*)$", url) is not None:
             self.image_url_filled = True
             self.image_url_entry.remove_css_class("error")
         else:
             self.image_url_filled = False
             self.image_url_entry.add_css_class("error")
-
         self.__update_btn_next()
 
     def __update_btn_next(self):
-        rule = self.image_url_filled
-        self.btn_next.set_sensitive(rule)
+        # install_mode may not be set yet during initial widget construction
+        mode = getattr(self.__window, "install_mode", 0)
+        if mode == 0:
+            self.btn_next.set_sensitive(True)
+        else:
+            self.btn_next.set_sensitive(self.image_url_filled)

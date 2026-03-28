@@ -17,11 +17,15 @@
 import subprocess
 from gettext import gettext as _
 from typing import Union
+import logging
+import os
 
-from gi.repository import Adw, GObject, Gtk
+from gi.repository import Adw, GLib, GObject, Gtk
 
 from tuna_installer.core.disks import DisksManager, Diskutils, Partition
 from tuna_installer.core.system import Systeminfo
+
+logger = logging.getLogger("Installer::Disk")
 
 
 @Gtk.Template(resource_path="/org/tunaos/Installer/gtk/widget-disk.ui")
@@ -664,9 +668,13 @@ class VanillaDefaultDisk(Adw.Bin):
     btn_next = Gtk.Template.Child()
     btn_auto = Gtk.Template.Child()
     btn_manual = Gtk.Template.Child()
+    btn_exit = Gtk.Template.Child()
     group_disks = Gtk.Template.Child()
     disk_space_err_box = Gtk.Template.Child()
     disk_space_err_label = Gtk.Template.Child()
+
+    _VIRTUAL_DISK_IMG = "/var/home/james/tuna-virtual-disk.img"
+    _VIRTUAL_DISK_SIZE = "50G"
 
     def __init__(self, window, distro_info, key, step, **kwargs):
         super().__init__(**kwargs)
@@ -680,6 +688,7 @@ class VanillaDefaultDisk(Adw.Bin):
         self.__disks = DisksManager()
         self.__partition_recipe = None
         self.__selected_disks_sum = 0
+        self.__use_virtual_disk = False
 
         self.min_disk_size = self.__window.recipe.get("min_disk_size", 51200)
         self.disk_space_err_label.set_label(
@@ -687,22 +696,115 @@ class VanillaDefaultDisk(Adw.Bin):
             % Diskutils.pretty_size(self.min_disk_size * 1_048_576)
         )
 
-        # append the disks widgets
+        # Append real disk rows
         for disk in self.__disks.all_disks(include_removable=False):
             entry = VanillaDefaultDiskEntry(self, disk)
             self.group_disks.add(entry)
-
             self.__registry_disks.append(entry)
+
+        # Virtual disk row — always present
+        self.__virtual_row = self.__build_virtual_disk_row()
+        self.group_disks.add(self.__virtual_row)
 
         all_disks_button = Adw.ButtonRow()
         all_disks_button.set_title(_("Show removable disks"))
         self.group_disks.add(all_disks_button)
 
-        # signals
         all_disks_button.connect("activated", self.__on_btn_all_disks)
         self.btn_next.connect("clicked", self.__on_btn_next_clicked)
         self.btn_auto.connect("clicked", self.__on_auto_clicked)
         self.btn_manual.connect("clicked", self.__on_manual_clicked)
+        self.btn_exit.connect("clicked", self.__on_btn_exit_clicked)
+
+        # Auto-select virtual disk if no physical disks are available
+        if not self.__registry_disks:
+            self.__select_virtual_disk()
+
+    def __on_btn_exit_clicked(self, button):
+        self.__window.get_application().quit()
+
+    def test_auto_advance(self):
+        self.btn_auto.emit("clicked")
+
+    def __select_virtual_disk(self):
+        if self.__use_virtual_disk:
+            return
+        self.__use_virtual_disk = True
+        self.__selected_disks = []
+        self.__selected_disks_sum = 0
+        self.disk_space_err_box.set_visible(False)
+        self.btn_auto.set_sensitive(True)
+        self.btn_manual.set_sensitive(False)
+        self.__virtual_check.set_active(True)
+        logger.info("Virtual disk selected")
+
+    def __build_virtual_disk_row(self):
+        row = Adw.ActionRow()
+        row.set_title(_("Virtual disk (for VMs / testing)"))
+        row.set_subtitle(
+            _("Creates a %s disk image and attaches it as a loop device") % self._VIRTUAL_DISK_SIZE
+        )
+
+        icon = Gtk.Image.new_from_icon_name("computer-symbolic")
+        row.add_prefix(icon)
+
+        self.__virtual_check = Gtk.CheckButton()
+        row.add_suffix(self.__virtual_check)
+        row.set_activatable_widget(self.__virtual_check)
+
+        # Wire activation to the row AND the check button for reliability
+        row.connect("activated", self.__on_virtual_row_activated)
+        self.__virtual_check.connect("toggled", self.__on_virtual_check_toggled)
+
+        # Deselect virtual row when a real disk row is selected
+        for entry in self.__registry_disks:
+            entry.select_button.set_group(self.__virtual_check)
+
+        return row
+
+    def __on_virtual_row_activated(self, row):
+        self.__select_virtual_disk()
+
+    def __on_virtual_check_toggled(self, widget):
+        if widget.get_active():
+            self.__select_virtual_disk()
+
+    def __setup_loopback(self) -> str | None:
+        """Create the disk image and attach it as a loop device. Returns the device path."""
+        import subprocess
+
+        # If a loop device was pre-created outside the sandbox, use it directly.
+        pre_created = os.environ.get("TUNA_VIRTUAL_DISK", "")
+        if pre_created:
+            logger.info(f"Using pre-created virtual disk: {pre_created}")
+            return pre_created
+
+        img = self._VIRTUAL_DISK_IMG
+        # Commands that need root must break out of the Flatpak sandbox via flatpak-spawn
+        def host_run(cmd, **kw):
+            return subprocess.run(["flatpak-spawn", "--host"] + cmd, **kw)
+
+        def host_output(cmd, **kw):
+            return subprocess.check_output(["flatpak-spawn", "--host"] + cmd, **kw)
+
+        try:
+            logger.info(f"Creating virtual disk image: {img} ({self._VIRTUAL_DISK_SIZE})")
+            subprocess.run(["truncate", "-s", self._VIRTUAL_DISK_SIZE, img], check=True)
+            host_run(["sudo", "losetup", "-fP", img], check=True)
+            out = host_output(
+                ["sudo", "losetup", "--list", "--output", "NAME,BACK-FILE", "--noheadings"],
+                text=True,
+            )
+            for line in out.splitlines():
+                parts = line.split()
+                if len(parts) >= 2 and parts[1] == img:
+                    logger.info(f"Loop device: {parts[0]}")
+                    return parts[0]
+            logger.error("Could not find loop device after setup")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to set up loop device: {e}")
+            return None
 
     def get_finals(self):
         return {"disk": self.__partition_recipe}
@@ -721,25 +823,34 @@ class VanillaDefaultDisk(Adw.Bin):
         self.confirm_partition_changes()
 
     def __on_auto_clicked(self, button):
-        pvs_to_remove = []
-        vgs_to_remove = []
-        for pv, vg in Diskutils.fetch_lvm_pvs():
-            pv_disk, _ = Diskutils.separate_device_and_partn(pv)
-            if pv_disk != self.__selected_disks[0].disk:
-                continue
-            pvs_to_remove.append(pv)
-            if vg is not None and vg not in vgs_to_remove:
-                vgs_to_remove.append(vg)
-
-        self.__partition_recipe = {
-            "auto": {
-                "disk": self.__selected_disks[0].disk,
-                "pretty_size": self.__selected_disks[0].pretty_size,
-                "size": self.__selected_disks[0].size,
-                "vgs_to_remove": vgs_to_remove,
-                "pvs_to_remove": pvs_to_remove,
+        if self.__use_virtual_disk:
+            loop_dev = self.__setup_loopback()
+            if not loop_dev:
+                logger.error("Virtual disk setup failed")
+                return
+            self.__partition_recipe = {
+                "auto": {
+                    "disk": loop_dev,
+                    "pretty_size": self._VIRTUAL_DISK_SIZE,
+                    "size": 0,
+                    "vgs_to_remove": [],
+                    "pvs_to_remove": [],
+                }
             }
-        }
+        else:
+            self.__partition_recipe = {
+                "auto": {
+                    "disk": self.__selected_disks[0].disk,
+                    "pretty_size": self.__selected_disks[0].pretty_size,
+                    "size": self.__selected_disks[0].size,
+                    "vgs_to_remove": [],
+                    "pvs_to_remove": [],
+                }
+            }
+        # In test mode skip the confirm modal and advance directly
+        if os.environ.get("TUNA_TEST"):
+            self.__window.next()
+            return
         self.confirm_partition_changes()
 
     def __on_manual_clicked(self, button):
@@ -747,14 +858,7 @@ class VanillaDefaultDisk(Adw.Bin):
         modal.connect("partitioning-set", self.__on_close_default_disk_part_modal)
         modal.present()
 
-    def on_disk_entry_toggled(self, widget, disk):
-        if widget.get_active():
-            self.__selected_disks.append(disk)
-            self.__selected_disks_sum += disk.size
-        else:
-            self.__selected_disks.remove(disk)
-            self.__selected_disks_sum -= disk.size
-
+    def __update_action_buttons(self):
         if (
             self.__selected_disks_sum / 1_048_576 < self.min_disk_size
             and self.__selected_disks_sum > 0
@@ -766,6 +870,16 @@ class VanillaDefaultDisk(Adw.Bin):
             self.disk_space_err_box.set_visible(False)
             self.btn_auto.set_sensitive(len(self.__selected_disks) == 1)
             self.btn_manual.set_sensitive(len(self.__selected_disks) > 0)
+
+    def on_disk_entry_toggled(self, widget, disk):
+        self.__use_virtual_disk = False
+        if widget.get_active():
+            self.__selected_disks.append(disk)
+            self.__selected_disks_sum += disk.size
+        else:
+            self.__selected_disks.remove(disk)
+            self.__selected_disks_sum -= disk.size
+        self.__update_action_buttons()
 
     def set_partition_recipe(self, recipe):
         self.__partition_recipe = recipe

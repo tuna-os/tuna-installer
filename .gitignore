@@ -8,3 +8,10 @@
 install/
 .buildconfig
 .vscode/
+.flatpak-builder/
+_build/
+flatpak/repo/
+tuna-virtual-disk.img
+tuna-installer-stdout.log
+installer.log
+org.tunaos.Installer.flatpak

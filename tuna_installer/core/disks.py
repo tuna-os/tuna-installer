@@ -1,6 +1,9 @@
 import json
+import logging
 import os
 import subprocess
+
+logger = logging.getLogger("Installer::Disks")
 
 
 class Diskutils:
@@ -34,16 +37,78 @@ class Diskutils:
 
     @staticmethod
     def fetch_lvm_pvs() -> list[list[str]]:
-        output_json = subprocess.check_output("sudo pvs --reportformat=json", shell=True).decode(
-            "utf-8"
-        )
-        output_pvs = json.loads(output_json)["report"][0]["pv"]
-        pv_with_vgs = []
-        for pv_output in output_pvs:
-            pv_name = pv_output["pv_name"]
-            vg_name = pv_output["vg_name"] if pv_output["vg_name"] != "" else None
-            pv_with_vgs.append([pv_name, vg_name])
-        return pv_with_vgs
+        try:
+            output_json = subprocess.check_output(
+                "sudo pvs --reportformat=json", shell=True, stderr=subprocess.DEVNULL
+            ).decode("utf-8")
+            output_pvs = json.loads(output_json)["report"][0]["pv"]
+            pv_with_vgs = []
+            for pv_output in output_pvs:
+                pv_name = pv_output["pv_name"]
+                vg_name = pv_output["vg_name"] if pv_output["vg_name"] != "" else None
+                pv_with_vgs.append([pv_name, vg_name])
+            return pv_with_vgs
+        except Exception as e:
+            logger.warning(f"Could not enumerate LVM PVs (safe to ignore in Flatpak): {e}")
+            return []
+
+    @staticmethod
+    def get_boot_disk() -> str | None:
+        """Return the /dev/... disk path the system is currently booted from.
+
+        Handles LVM, dm-crypt, and plain partitions by walking the slave tree
+        back to the underlying physical disk.
+        """
+        try:
+            source = None
+            mountpoint_used = None
+            # bootc/ostree systems mount the real root at /sysroot
+            for mountpoint in ("/sysroot", "/"):
+                try:
+                    src = subprocess.check_output(
+                        f"findmnt -n -o SOURCE {mountpoint}",
+                        shell=True, stderr=subprocess.DEVNULL,
+                    ).decode().strip()
+                    if src:
+                        source = src
+                        mountpoint_used = mountpoint
+                        break
+                except subprocess.CalledProcessError:
+                    continue
+
+            if not source:
+                return None
+
+            # Walk the reverse dependency tree (slaves) to find the physical disk.
+            # lsblk -sno lists ancestors; grep for TYPE == disk.
+            output = subprocess.check_output(
+                f"lsblk -sno NAME,TYPE {source}",
+                shell=True, stderr=subprocess.DEVNULL,
+            ).decode().strip()
+
+            for line in output.splitlines():
+                parts = line.split()
+                if len(parts) >= 2 and parts[-1] == "disk":
+                    # Strip lsblk tree-drawing characters
+                    name = parts[0].lstrip("└─├│ ")
+                    disk = f"/dev/{name}"
+                    logger.info(f"Boot disk detected: {disk} (via {source} at {mountpoint_used})")
+                    return disk
+
+            # Fallback: direct pkname lookup (works for plain partitions)
+            pkname = subprocess.check_output(
+                f"lsblk -no pkname {source}",
+                shell=True, stderr=subprocess.DEVNULL,
+            ).decode().strip()
+            if pkname:
+                disk = f"/dev/{pkname}"
+                logger.info(f"Boot disk detected: {disk} (pkname fallback)")
+                return disk
+
+            return source
+        except Exception as e:
+            logger.warning(f"Could not detect boot disk: {e}")
+            return None
 
 
 class Disk:
@@ -218,6 +283,9 @@ class Partition:
 
 class DisksManager:
     def __init__(self):
+        self.__boot_disk = Diskutils.get_boot_disk()
+        if self.__boot_disk:
+            logger.info(f"Boot disk excluded from selection: {self.__boot_disk}")
         self.__disks = self.__get_disks()
 
     def __get_disks(self):
@@ -227,8 +295,13 @@ class DisksManager:
             if disk.startswith(("loop", "ram", "sr", "zram", "dm-")):
                 continue
 
+            d = Disk(disk)
 
-            disks.append(Disk(disk))
+            if self.__boot_disk and d.disk == self.__boot_disk:
+                logger.info(f"Skipping boot disk: {d.disk}")
+                continue
+
+            disks.append(d)
 
         return disks
 

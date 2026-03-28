@@ -1,40 +1,19 @@
 {
-    "log_file": "/etc/vanilla/installer.log",
-    "distro_name": "Vanilla OS",
-    "distro_logo": "org.vanillaos.Installer-flower",
-    "images": {
-        "default": "ghcr.io/vanilla-os/desktop:main",
-        "nvidia": "ghcr.io/vanilla-os/nvidia:main",
-        "vm": "ghcr.io/vanilla-os/vm:main"
-    },
-    "default_root_size": 12288,
-    "min_disk_size": 51200,
-    "min_partition_sizes": {
-        "/boot": 900,
-        "/boot/efi": 512,
-        "/": 21504,
-        "/var": 25600
-    },
+    "log_file": "/var/log/tuna-installer.log",
+    "distro_name": "TunaOS",
+    "distro_logo": "org.tunaos.Installer",
+    "imgref": "ghcr.io/tuna-os/yellowfin:gnome-hwe",
+    "targetImgref": "ostree-remote-registry:tunaos:ghcr.io/tuna-os/yellowfin:gnome-hwe",
     "tour": {
         "welcome": {
-            "resource": "/org/vanillaos/Installer/assets/welcome.png",
-            "title": "Installing Vanilla OS",
+            "resource": "/org/tunaos/Installer/assets/welcome.png",
+            "title": "Installing TunaOS",
             "description": "The process could take a few minutes, please be patient"
         },
-        "control": {
-            "resource": "/org/vanillaos/Installer/assets/ready.svg",
-            "title": "Always Ready",
-            "description": "Don't be held back by your system, use it the way you want"
-        },
-        "containerized": {
-            "resource": "/org/vanillaos/Installer/assets/containerized.svg",
-            "title": "Containerized",
-            "description": "You never have to worry about breakage due to incompatible or conflicting packages"
-        },
         "completed": {
-            "resource": "/org/vanillaos/Installer/assets/complete.svg",
-            "title": "Complete and Reliable",
-            "description": "The largest software catalog at your fingertips"
+            "resource": "/org/tunaos/Installer/assets/complete.svg",
+            "title": "Installation Complete",
+            "description": "Your system is ready to use"
         }
     },
     "steps": {
@@ -42,44 +21,14 @@
             "template": "welcome",
             "protected": true
         },
-        "language": {
-            "template": "language"
-        },
-        "keyboard": {
-            "template": "keyboard"
-        },
-        "network": {
-            "template": "network"
-        },
-        "conn-check": {
-            "template": "conn-check"
-        },
-        "timezone": {
-            "template": "timezone"
-        },
-        "nvidia": {
-            "template": "nvidia",
-            "display-conditions": [
-                "lspci | grep -i '.* nvidia .*'"
-            ],
-            "default_image": true
-        },
-        "vm": {
-            "template": "vm",
-            "display-conditions": [
-                "grep 'hypervisor' /proc/cpuinfo"
-            ],
-            "default_image": true
-        },
-        "image": {
-            "template": "image",
-            "custom_image": true
-        },
         "disk": {
             "template": "disk"
         },
         "encryption": {
             "template": "encryption"
+        },
+        "image": {
+            "template": "image"
         }
     }
 }

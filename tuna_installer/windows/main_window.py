@@ -20,7 +20,7 @@ import json
 import logging
 import os
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, GLib, Gtk
 
 from tuna_installer.utils.builder import Builder
 from tuna_installer.utils.processor import Processor
@@ -66,6 +66,23 @@ class VanillaWindow(Adw.ApplicationWindow):
         self.carousel.connect("page-changed", self.__on_page_changed)
         self.__builder.widgets[-1].btn_next.connect("clicked", self.update_finals)
         self.__view_confirm.connect("installation-confirmed", self.on_installation_confirmed)
+
+        if os.environ.get("TUNA_TEST"):
+            self.carousel.connect("page-changed", self.__on_page_changed_test)
+            # Welcome is the first page — no page-changed fires for it, kick it manually
+            GLib.timeout_add(600, self.__test_advance_first_page)
+
+    def __test_advance_first_page(self):
+        page = self.carousel.get_nth_page(0)
+        if hasattr(page, "test_auto_advance"):
+            page.test_auto_advance()
+        return GLib.SOURCE_REMOVE
+
+    def __on_page_changed_test(self, carousel, index):
+        page = carousel.get_nth_page(int(index))
+        if hasattr(page, "test_auto_advance"):
+            # 700ms: enough for animations + update_finals() to have run
+            GLib.timeout_add(700, lambda: page.test_auto_advance() or GLib.SOURCE_REMOVE)
 
     def rebuild_ui(self, mode=1):
         self.install_mode = mode
@@ -145,6 +162,9 @@ class VanillaWindow(Adw.ApplicationWindow):
         logger.info("Going to next page")
 
         cur_index = self.carousel.get_position()
+        if int(cur_index) >= self.carousel.get_n_pages() - 1:
+            logger.info(f"Already on last page ({int(cur_index)}), ignoring next()")
+            return
         page = self.carousel.get_nth_page(cur_index)
         if page.delta:
             logger.info(f"Removing deltas of page {int(cur_index)}")
@@ -182,5 +202,9 @@ class VanillaWindow(Adw.ApplicationWindow):
         self.toasts.add_toast(toast)
 
     def set_installation_result(self, result, terminal):
+        if result:
+            logger.info("Installation complete!")
+        else:
+            logger.error("Installation failed!")
         self.__view_done.set_result(result, terminal)
         self.next()

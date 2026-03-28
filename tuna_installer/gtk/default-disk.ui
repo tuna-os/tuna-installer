@@ -23,6 +23,20 @@
             </style>
           </object>
         </child>
+        <child type="overlay">
+          <object class="GtkButton" id="btn_exit">
+            <property name="margin-end">12</property>
+            <property name="margin-start">12</property>
+            <property name="icon-name">window-close-symbolic</property>
+            <property name="halign">1</property>
+            <property name="valign">3</property>
+            <property name="tooltip-text" translatable="yes">Exit installer</property>
+            <style>
+              <class name="circular"/>
+              <class name="destructive-action"/>
+            </style>
+          </object>
+        </child>
         <child>
           <object class="AdwStatusPage" id="status_page">
             <property name="icon-name">vanilla-installer-harddisk-symbolic</property>

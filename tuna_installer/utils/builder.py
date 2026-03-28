@@ -24,12 +24,7 @@ from tuna_installer.defaults.conn_check import VanillaDefaultConnCheck
 from tuna_installer.defaults.disk import VanillaDefaultDisk
 from tuna_installer.defaults.encryption import VanillaDefaultEncryption
 from tuna_installer.defaults.image import VanillaDefaultImage
-from tuna_installer.defaults.keyboard import VanillaDefaultKeyboard
-from tuna_installer.defaults.language import VanillaDefaultLanguage
-from tuna_installer.defaults.network import VanillaDefaultNetwork
-from tuna_installer.defaults.timezone import VanillaDefaultTimezone
 from tuna_installer.defaults.welcome import VanillaDefaultWelcome
-from tuna_installer.layouts.preferences import VanillaLayoutPreferences
 from tuna_installer.layouts.yes_no import VanillaLayoutYesNo
 from tuna_installer.utils.recipe import RecipeLoader
 
@@ -37,13 +32,8 @@ logger = logging.getLogger("Installer::Builder")
 
 
 templates = {
-    "network": VanillaDefaultNetwork,
     "conn-check": VanillaDefaultConnCheck,
     "welcome": VanillaDefaultWelcome,
-    "language": VanillaDefaultLanguage,
-    "keyboard": VanillaDefaultKeyboard,
-    "timezone": VanillaDefaultTimezone,
-    "preferences": VanillaLayoutPreferences,
     "disk": VanillaDefaultDisk,
     "encryption": VanillaDefaultEncryption,
     "image": VanillaDefaultImage,

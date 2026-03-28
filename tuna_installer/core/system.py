@@ -9,9 +9,12 @@ class Systeminfo:
     @staticmethod
     def is_uefi() -> bool:
         if not Systeminfo.uefi:
-            proc = subprocess.Popen(["test", "-d", "/sys/firmware/efi"])
-            proc.wait()
-            Systeminfo.uefi = proc.returncode == 0
+            import os
+            # Skip UEFI check inside Flatpak — assume UEFI
+            if os.path.exists("/.flatpak-info"):
+                Systeminfo.uefi = True
+            else:
+                Systeminfo.uefi = os.path.isdir("/sys/firmware/efi")
 
         return Systeminfo.uefi
 

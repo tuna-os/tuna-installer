@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, GLib, Gtk
+import os
 
 from tuna_installer.windows.dialog_recovery import VanillaRecoveryDialog
 from tuna_installer.windows.dialog_poweroff import VanillaPoweroffDialog
@@ -49,6 +50,9 @@ class VanillaDefaultWelcome(Adw.Bin):
         self.row_install_custom.connect("activated", self.__install_custom)
         self.row_recovery.connect("activated", self.__on_recovery_clicked)
         self.row_poweroff.connect("activated", self.__on_poweroff_clicked)
+
+    def test_auto_advance(self):
+        self.row_install.emit("activated")
 
     def get_finals(self):
         return {}

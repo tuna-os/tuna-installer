@@ -14,10 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import re
 from gettext import gettext as _
 
-from gi.repository import Adw, GObject, Gtk
+from gi.repository import Adw, GLib, GObject, Gtk
 
 
 @Gtk.Template(resource_path="/org/tunaos/Installer/gtk/widget-choice.ui")
@@ -142,6 +143,9 @@ class VanillaConfirm(Adw.Bin):
         self._btn_confirm_signal = self.btn_confirm.connect(
             "clicked", self.__on_confirm
         )
+
+    def test_auto_advance(self):
+        self.btn_confirm.emit("clicked")
 
     def __on_confirm(self, widget):
         self.emit("installation-confirmed")

@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, GLib, Gtk
+import os
 
 @Gtk.Template(resource_path="/org/tunaos/Installer/gtk/default-encryption.ui")
 class VanillaDefaultEncryption(Adw.Bin):
@@ -49,6 +50,11 @@ class VanillaDefaultEncryption(Adw.Bin):
         )
 
         self.__update_btn_next()
+
+    def test_auto_advance(self):
+        # Ensure encryption is off — TPM2 won't work on virtual/loop disks
+        self.use_encryption_switch.set_active(False)
+        self.btn_next.emit("clicked")
 
     def get_finals(self):
         return {

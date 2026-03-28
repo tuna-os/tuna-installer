@@ -19,7 +19,14 @@ import time
 from gettext import gettext as _
 
 if os.path.exists("/.flatpak-info"):
-    _FISHERMAN_CMD = "pkexec /app/bin/fisherman"
+    if os.environ.get("TUNA_TEST"):
+        # pkexec requires an interactive polkit agent; in test/CI use flatpak-spawn --host sudo
+        # Allow overriding the fisherman path via TUNA_FISHERMAN_PATH (needed on immutable OSes
+        # where /usr/local/bin is read-only — pass e.g. /tmp/fisherman instead)
+        _fisherman_bin = os.environ.get("TUNA_FISHERMAN_PATH", "/usr/local/bin/fisherman")
+        _FISHERMAN_CMD = f"flatpak-spawn --host sudo {_fisherman_bin}"
+    else:
+        _FISHERMAN_CMD = "pkexec /app/bin/fisherman"
 else:
     _FISHERMAN_CMD = "sudo /usr/local/bin/fisherman"
 
@@ -188,8 +195,8 @@ class VanillaProgress(Gtk.Box):
             Vte.PtyFlags.DEFAULT,
             ".",
             ["sh", "-c", f"{_FISHERMAN_CMD} {recipe}"],
-            [],
-            GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+            None,
+            GLib.SpawnFlags.DEFAULT,
             None,
             None,
             -1,

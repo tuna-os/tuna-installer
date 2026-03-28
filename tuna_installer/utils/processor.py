@@ -16,6 +16,7 @@
 
 import json
 import logging
+import os
 import tempfile
 
 logger = logging.getLogger("Installer::Processor")
@@ -43,13 +44,17 @@ class Processor:
         logger.info(f"Building fisherman recipe from finals: {list(merged.keys())}")
 
         # --- Disk ---
+        # disk_info comes from VanillaDefaultDisk.get_finals() as:
+        #   {"auto": {"disk": "/dev/vda", "pretty_size": ..., ...}}
         disk_info = merged.get("disk", {})
         disk_device = ""
         filesystem = "xfs"
         btrfs_subvolumes = False
 
         if isinstance(disk_info, dict):
-            if "disk" in disk_info:
+            if "auto" in disk_info:
+                disk_device = disk_info["auto"].get("disk", "")
+            elif "disk" in disk_info:
                 disk_device = disk_info["disk"]
             elif "device" in disk_info:
                 disk_device = disk_info["device"]
@@ -118,10 +123,22 @@ class Processor:
 
         logger.info(f"Generated fisherman recipe: disk={disk_device}, image={image}, encryption={encryption_type}")
 
+        # In a Flatpak sandbox /tmp and /run/user/ are private and not visible on the host.
+        # With --filesystem=host, $HOME is shared. Use ~/.cache/tuna-installer/ so that
+        # flatpak-spawn --host can read the recipe file from the host side.
+        in_flatpak = os.path.exists("/.flatpak-info")
+        if in_flatpak:
+            cache_dir = os.path.join(os.environ.get("HOME", "/root"), ".cache", "tuna-installer")
+            os.makedirs(cache_dir, exist_ok=True)
+            tmp_dir = cache_dir
+        else:
+            tmp_dir = None
+
         with tempfile.NamedTemporaryFile(
             mode="w",
             suffix=".json",
             prefix="tuna-recipe-",
+            dir=tmp_dir,
             delete=False,
         ) as f:
             json.dump(recipe, f, indent=2)

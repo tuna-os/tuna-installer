@@ -65,4 +65,8 @@ if compile_schemas.found()
   )
 endif
 
+install_data('../recipe.json',
+  install_dir: join_paths(get_option('datadir'), 'tuna-installer')
+)
+
 subdir('icons')

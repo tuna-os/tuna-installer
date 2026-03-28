@@ -1,7 +1,7 @@
 {
   "app-id": "org.tunaos.Installer",
   "runtime": "org.gnome.Platform",
-  "runtime-version": "49",
+  "runtime-version": "50",
   "sdk": "org.gnome.Sdk",
   "command": "tuna-installer",
   "finish-args": [
@@ -26,6 +26,20 @@
     }
   },
   "modules": [
+    {
+      "name": "mutter-schemas",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm644 org.gnome.mutter.gschema.xml /app/share/glib-2.0/schemas/org.gnome.mutter.gschema.xml",
+        "glib-compile-schemas /app/share/glib-2.0/schemas/"
+      ],
+      "sources": [
+        {
+          "type": "file",
+          "path": "org.gnome.mutter.gschema.xml"
+        }
+      ]
+    },
     {
       "name": "go",
       "buildsystem": "simple",

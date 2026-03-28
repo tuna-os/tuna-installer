@@ -27,6 +27,7 @@ class RecipeLoader:
     recipe_paths = [
         "/etc/tunaos-installer/recipe.json",
         "/etc/vanilla-installer/recipe.json",
+        "/app/share/tuna-installer/recipe.json",
     ]
     recipe_path = None
 
