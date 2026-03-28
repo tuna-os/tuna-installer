@@ -338,10 +338,11 @@
               "imgref": "ghcr.io/ublue-os/bluefin-dx:lts-hwe-testing-50",
               "desc": "LTS HWE testing with GNOME 50"
             }
-          ]
+          ],
+          "icon": "resource:///org/tunaos/Installer/images/bluefin-lts.png"
         }
       ],
-      "icon": "resource:///org/tunaos/Installer/images/bluefin.svg"
+      "icon": "resource:///org/tunaos/Installer/images/bluefin.png"
     },
     {
       "name": "Aurora",
