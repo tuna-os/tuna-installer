@@ -46,16 +46,16 @@
     <file>assets/ready.svg</file>
     <file>assets/containerized.svg</file>
     <file>assets/unsupported.svg</file>
-    <file>../data/images.json</file>
-    <file>../data/images/bluefin.png</file>
-    <file>../data/images/bluefin-lts.png</file>
-    <file preprocess="xml-stripblanks">../data/images/aurora.svg</file>
-    <file preprocess="xml-stripblanks">../data/images/bazzite.svg</file>
-    <file preprocess="xml-stripblanks">../data/images/tunaos.svg</file>
-    <file preprocess="xml-stripblanks">../data/images/bonito.svg</file>
-    <file preprocess="xml-stripblanks">../data/images/skipjack.svg</file>
-    <file preprocess="xml-stripblanks">../data/images/albacore.svg</file>
-    <file preprocess="xml-stripblanks">../data/images/yellowfin.svg</file>
+    <file alias="images.json">../data/images.json</file>
+    <file alias="images/bluefin.png">../data/images/bluefin.png</file>
+    <file alias="images/bluefin-lts.png">../data/images/bluefin-lts.png</file>
+    <file preprocess="xml-stripblanks" alias="images/aurora.svg">../data/images/aurora.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/bazzite.svg">../data/images/bazzite.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/tunaos.svg">../data/images/tunaos.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/bonito.svg">../data/images/bonito.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/skipjack.svg">../data/images/skipjack.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/albacore.svg">../data/images/albacore.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/yellowfin.svg">../data/images/yellowfin.svg</file>
   </gresource>
   <gresource prefix="/org/tunaos/Installer/icons/scalable/actions/">
     <file preprocess="xml-stripblanks">../data/icons/hicolor/symbolic/actions/background-app-ghost-symbolic.svg</file>
