@@ -47,7 +47,8 @@
     <file>assets/containerized.svg</file>
     <file>assets/unsupported.svg</file>
     <file>../data/images.json</file>
-    <file preprocess="xml-stripblanks">../data/images/bluefin.svg</file>
+    <file>../data/images/bluefin.png</file>
+    <file>../data/images/bluefin-lts.png</file>
     <file preprocess="xml-stripblanks">../data/images/aurora.svg</file>
     <file preprocess="xml-stripblanks">../data/images/bazzite.svg</file>
     <file preprocess="xml-stripblanks">../data/images/tunaos.svg</file>

@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="12" fill="#1565C0"/>
-  <!-- Bluefin fish silhouette -->
-  <ellipse cx="30" cy="32" rx="16" ry="10" fill="#90CAF9"/>
-  <polygon points="46,32 58,22 58,42" fill="#90CAF9"/>
-  <circle cx="20" cy="29" r="2" fill="#1565C0"/>
-  <ellipse cx="30" cy="32" rx="6" ry="4" fill="#42A5F5"/>
-</svg>
