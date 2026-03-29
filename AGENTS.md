@@ -68,10 +68,14 @@ disk install pipeline. It emits newline-delimited JSON progress to stdout:
 - Scratch space for bootc blob downloads is `/var/fisherman-tmp` (disk-backed),
   bind-mounted to `/var/tmp` on the host. Do NOT change this to `/run/*` —
   `/run` is a tmpfs (~50% RAM) and too small for large images.
-- Partition layout: **2-partition** (EFI + root) for unencrypted; **3-partition**
-  (EFI + unencrypted /boot + LUKS root) for encrypted. The separate unencrypted
-  `/boot` is required so `bootupctl` can read the block device UUID from a raw
-  (non-mapper) partition inside its bwrap sandbox.
+- Partition layout: always **3-partition** (EFI + `/boot` ext4 + root). The
+  separate ext4 `/boot` is required for two reasons: (1) GRUB's built-in XFS
+  driver cannot read el10 XFS features (`nrext64`, `exchange`, `rmapbt`), so
+  GRUB must only ever read ext4; (2) for encrypted installs, `bootupctl` (inside
+  its bwrap sandbox) must be able to find the `/boot` UUID from a raw block
+  device rather than a LUKS mapper. Both `Partition()` and
+  `PartitionEncrypted()` produce the same 3-partition GPT table; the difference
+  is that encrypted installs additionally set up LUKS on p3.
 
 ### tuna-installer (Python, GTK4/Adwaita)
 
