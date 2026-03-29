@@ -131,17 +131,33 @@ jobs:
         run: |
           LOOPDEV="${{ steps.loopdev.outputs.loopdev }}"
           IMAGE_NAME="${{ matrix.image.name }}"
-          LOG="/tmp/boot-${IMAGE_NAME}.log"
+          LOG="/tmp/boot-$(echo "$IMAGE_NAME" | tr -cs 'a-zA-Z0-9_-' '_').log"
+
+          OVMF_CODE=$(ls /usr/share/OVMF/OVMF_CODE{_4M,}.fd 2>/dev/null | head -1)
+          OVMF_VARS=$(ls /usr/share/OVMF/OVMF_VARS{_4M,}.fd 2>/dev/null | head -1)
+          if [ -z "$OVMF_CODE" ] || [ -z "$OVMF_VARS" ]; then
+            echo "FAIL: OVMF firmware files not found"
+            ls /usr/share/OVMF/ || true
+            exit 1
+          fi
 
           echo "Booting $IMAGE_NAME with QEMU+OVMF (timeout 180s)..."
+          echo "OVMF_CODE=$OVMF_CODE  OVMF_VARS=$OVMF_VARS"
           sudo timeout 180 qemu-system-x86_64 \
             -enable-kvm \
             -m 2G \
             -drive file="$LOOPDEV",format=raw,if=virtio \
-            -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd \
+            -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \
+            -drive if=pflash,format=raw,snapshot=on,file="$OVMF_VARS" \
             -serial stdio \
             -nographic \
-            -no-reboot 2>&1 | tee "$LOG" || true
+            -no-reboot 2>&1 | tee "$LOG"
+          QEMU_EXIT=${PIPESTATUS[0]}
+          if [ "$QEMU_EXIT" -ne 0 ] && [ "$QEMU_EXIT" -ne 124 ]; then
+            echo "FAIL: QEMU exited with unexpected code $QEMU_EXIT"
+            tail -20 "$LOG"
+            exit 1
+          fi
 
           if grep -q "login:" "$LOG"; then
             echo "PASS: login prompt found for $IMAGE_NAME"
