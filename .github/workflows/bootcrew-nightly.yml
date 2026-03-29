@@ -131,12 +131,18 @@ jobs:
         run: |
           LOOPDEV="${{ steps.loopdev.outputs.loopdev }}"
           IMAGE_NAME="${{ matrix.image.name }}"
-          LOG="/tmp/boot-$(echo "$IMAGE_NAME" | tr -cs 'a-zA-Z0-9_-' '_').log"
+          LOG="/tmp/boot-$(printf '%s' "$IMAGE_NAME" | tr -cs 'a-zA-Z0-9_-' '_').log"
 
           OVMF_CODE=$(ls /usr/share/OVMF/OVMF_CODE{_4M,}.fd 2>/dev/null | head -1)
-          OVMF_VARS=$(ls /usr/share/OVMF/OVMF_VARS{_4M,}.fd 2>/dev/null | head -1)
-          if [ -z "$OVMF_CODE" ] || [ -z "$OVMF_VARS" ]; then
-            echo "FAIL: OVMF firmware files not found"
+          if [ -z "$OVMF_CODE" ]; then
+            echo "FAIL: OVMF_CODE.fd not found"
+            ls /usr/share/OVMF/ || true
+            exit 1
+          fi
+          OVMF_SUFFIX=$(basename "$OVMF_CODE" | sed 's/OVMF_CODE//;s/\.fd//')
+          OVMF_VARS="/usr/share/OVMF/OVMF_VARS${OVMF_SUFFIX}.fd"
+          if [ ! -f "$OVMF_VARS" ]; then
+            echo "FAIL: matched $OVMF_CODE but corresponding VARS file $OVMF_VARS not found"
             ls /usr/share/OVMF/ || true
             exit 1
           fi
