@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Fake ostree for fisherman's fast disk-ops CI test.
+# Responds to: ostree admin --sysroot=<PATH> --print-current-dir
+# Returns the fake deployment directory created by fake podman.
+
+set -euo pipefail
+
+SYSROOT=""
+for arg in "$@"; do
+    if [[ "$arg" == --sysroot=* ]]; then
+        SYSROOT="${arg#--sysroot=}"
+    fi
+done
+
+if [[ -n "$SYSROOT" ]]; then
+    echo "$SYSROOT/ostree/deploy/default/deploy/fake123.0"
+    exit 0
+fi
+
+# Pass through any other ostree subcommands (shouldn't happen in tests).
+echo "fake-ostree: unhandled args: $*" >&2
+exit 1

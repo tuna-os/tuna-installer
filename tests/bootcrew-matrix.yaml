@@ -1,0 +1,31 @@
+# Bootcrew CI regression test matrix.
+# Used by both bootcrew-fast.yml (PR gate) and bootcrew-nightly.yml (full install).
+# Add new images here; both workflows pick them up automatically.
+images:
+  - name: yellowfin-gnome50
+    image: ghcr.io/tuna-os/yellowfin:gnome50
+    filesystem: xfs
+    composefs_backend: false
+    unified_storage: false
+    selinux_disabled: true
+
+  - name: ubuntu-bootc
+    image: ghcr.io/bootcrew/ubuntu-bootc:latest
+    filesystem: xfs
+    composefs_backend: true
+    unified_storage: false
+    selinux_disabled: false
+
+  - name: gnomeos-bootc
+    image: ghcr.io/bootcrew/gnomeos-bootc:latest
+    filesystem: xfs
+    composefs_backend: true
+    unified_storage: false
+    selinux_disabled: false
+
+  - name: opensuse-bootc
+    image: ghcr.io/bootcrew/opensuse-bootc:latest
+    filesystem: xfs
+    composefs_backend: true
+    unified_storage: false
+    selinux_disabled: false
