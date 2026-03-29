@@ -1,0 +1,140 @@
+name: Bootcrew Nightly (full install)
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'   # Weekly, Monday 02:00 UTC
+  workflow_dispatch:        # Manual trigger
+
+jobs:
+  # Read the image matrix from tests/bootcrew-matrix.yaml.
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Parse image matrix
+        id: read-matrix
+        run: |
+          MATRIX=$(yq -o json tests/bootcrew-matrix.yaml | jq -c '.images')
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  full-install:
+    name: install / ${{ matrix.image.name }}
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false          # All images run even if one fails
+      matrix:
+        image: ${{ fromJson(needs.setup.outputs.matrix) }}
+
+    defaults:
+      run:
+        working-directory: fisherman/fisherman
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+          cache-dependency-path: fisherman/fisherman/go.sum
+
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y podman xfsprogs btrfs-progs cryptsetup-bin ostree
+
+      - name: Build fisherman
+        run: go build -o /tmp/fisherman ./cmd/fisherman/
+
+      - name: Create loop device (50 GB sparse)
+        id: loopdev
+        run: |
+          TMPFILE=$(mktemp)
+          truncate -s 50G "$TMPFILE"
+          LOOPDEV=$(sudo losetup --find --show "$TMPFILE")
+          echo "loopdev=$LOOPDEV" >> "$GITHUB_OUTPUT"
+          echo "tmpfile=$TMPFILE" >> "$GITHUB_OUTPUT"
+
+      - name: Generate recipe
+        run: |
+          cat > /tmp/recipe.json <<EOF
+          {
+            "disk": "${{ steps.loopdev.outputs.loopdev }}",
+            "filesystem": "${{ matrix.image.filesystem }}",
+            "composeFsBackend": ${{ matrix.image.composefs_backend }},
+            "unifiedStorage": ${{ matrix.image.unified_storage }},
+            "selinuxDisabled": ${{ matrix.image.selinux_disabled }},
+            "encryption": {"type": "none"},
+            "image": "${{ matrix.image.image }}",
+            "hostname": "ci-test",
+            "flatpaks": []
+          }
+          EOF
+
+      - name: Run fisherman
+        run: sudo /tmp/fisherman /tmp/recipe.json
+
+      - name: Verify installation
+        run: |
+          LOOPDEV="${{ steps.loopdev.outputs.loopdev }}"
+          COMPOSEFS="${{ matrix.image.composefs_backend }}"
+
+          # 1. Check 3-partition layout.
+          LABEL_COUNT=$(sudo lsblk -o LABEL "$LOOPDEV" | grep -cE 'EFI-SYSTEM|boot|root' || true)
+          if [ "$LABEL_COUNT" -ne 3 ]; then
+            echo "FAIL: expected 3 labelled partitions, got $LABEL_COUNT"
+            sudo lsblk -o NAME,SIZE,FSTYPE,LABEL "$LOOPDEV"
+            exit 1
+          fi
+
+          # 2. Mount /boot partition (p2) and verify boot layout.
+          BOOT_PART="${LOOPDEV}p2"
+          VERIFY_DIR=$(mktemp -d)
+          sudo mount "$BOOT_PART" "$VERIFY_DIR"
+
+          if [ "$COMPOSEFS" = "true" ]; then
+            # Composefs-native: verify hostname in sysroot /etc.
+            ROOT_PART="${LOOPDEV}p3"
+            ROOT_DIR=$(mktemp -d)
+            sudo mount "$ROOT_PART" "$ROOT_DIR"
+            if [ ! -f "$ROOT_DIR/etc/hostname" ]; then
+              echo "FAIL: $ROOT_DIR/etc/hostname not found (composefs-native)"
+              sudo umount "$ROOT_DIR" || true
+              sudo umount "$VERIFY_DIR" || true
+              exit 1
+            fi
+            echo "OK: composefs-native hostname at $ROOT_DIR/etc/hostname"
+            sudo umount "$ROOT_DIR"
+          else
+            # Ostree: verify boot loader entries exist.
+            if ! ls "$VERIFY_DIR/loader/entries/"*.conf 1>/dev/null 2>&1; then
+              echo "FAIL: no boot loader entries in $VERIFY_DIR/loader/entries/"
+              sudo umount "$VERIFY_DIR" || true
+              exit 1
+            fi
+            echo "OK: ostree boot loader entries found"
+          fi
+
+          sudo umount "$VERIFY_DIR"
+          echo "PASS: ${{ matrix.image.name }}"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          sudo losetup -d "${{ steps.loopdev.outputs.loopdev }}" || true
+          rm -f "${{ steps.loopdev.outputs.tmpfile }}" || true
+
+      - name: Report result to job summary
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          IMAGE="${{ matrix.image.name }}"
+          echo "| $IMAGE | $STATUS |" >> "$GITHUB_STEP_SUMMARY"
