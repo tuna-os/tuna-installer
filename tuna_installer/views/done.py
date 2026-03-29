@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import subprocess
 from gettext import gettext as _
 
@@ -60,7 +61,11 @@ class VanillaDone(Adw.Bin):
             self.btn_close.set_visible(True)
 
     def __on_reboot_clicked(self, button):
-        subprocess.run(["gnome-session-quit", "--reboot"])
+        in_flatpak = os.path.exists("/.flatpak-info")
+        if in_flatpak:
+            subprocess.run(["flatpak-spawn", "--host", "systemctl", "reboot"])
+        else:
+            subprocess.run(["systemctl", "reboot"])
 
     def __on_close_clicked(self, button):
         self.__window.close()
