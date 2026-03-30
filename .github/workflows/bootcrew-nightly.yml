@@ -67,6 +67,12 @@ jobs:
 
       - name: Generate recipe
         run: |
+          IMAGE_NAME="${{ matrix.image.name }}"
+          FLATPAKS="[]"
+          if [[ "$IMAGE_NAME" == *"bluefin"* || "$IMAGE_NAME" == *"yellowfin"* ]]; then
+            FLATPAKS='["org.mozilla.firefox"]'
+          fi
+
           cat > /tmp/recipe.json <<EOF
           {
             "disk": "${{ steps.loopdev.outputs.loopdev }}",
@@ -77,9 +83,10 @@ jobs:
             "encryption": {"type": "none"},
             "image": "${{ matrix.image.image }}",
             "hostname": "ci-test",
-            "flatpaks": ["org.mozilla.firefox"]
+            "flatpaks": $FLATPAKS
           }
           EOF
+
 
       - name: Pre-pull image via podman
         # Pull with podman first so containers-storage is in a consistent state.
@@ -132,32 +139,37 @@ jobs:
             echo "OK: composefs-native hostname at $ROOT_DIR/etc/hostname"
           fi
 
-          # Find Firefox directory anywhere on the disk.
-          echo "Searching for Firefox flatpak..."
-          FLATPAK_APP_DIR=$(sudo find "$ROOT_DIR" -type d -path "*/var/lib/flatpak/app/org.mozilla.firefox" -print -quit)
-          if [ -z "$FLATPAK_APP_DIR" ]; then
-             echo "FAIL: Flatpak firefox not found anywhere on the root partition"
-             echo "--- Full find (debug) ---"
-             sudo find "$ROOT_DIR" -maxdepth 6 || true
-             sudo umount "$ROOT_DIR" || true
-             sudo umount "$VERIFY_DIR" || true
-             exit 1
-          fi
-          echo "OK: Flatpak found at $FLATPAK_APP_DIR"
+          IMAGE_NAME="${{ matrix.image.name }}"
+          if [[ "$IMAGE_NAME" == *"bluefin"* || "$IMAGE_NAME" == *"yellowfin"* ]]; then
+            # Find Firefox directory anywhere on the disk.
+            echo "Searching for Firefox flatpak..."
+            FLATPAK_APP_DIR=$(sudo find "$ROOT_DIR" -type d -path "*/var/lib/flatpak/app/org.mozilla.firefox" -print -quit)
+            if [ -z "$FLATPAK_APP_DIR" ]; then
+               echo "FAIL: Flatpak firefox not found anywhere on the root partition"
+               echo "--- Full find (debug) ---"
+               sudo find "$ROOT_DIR" -maxdepth 6 || true
+               sudo umount "$ROOT_DIR" || true
+               sudo umount "$VERIFY_DIR" || true
+               exit 1
+            fi
+            echo "OK: Flatpak found at $FLATPAK_APP_DIR"
 
-          # Extract the installation path (the directory containing 'app/')
-          FLATPAK_INSTALLATION=${FLATPAK_APP_DIR%/app/org.mozilla.firefox}
+            # Extract the installation path (the directory containing 'app/')
+            FLATPAK_INSTALLATION=${FLATPAK_APP_DIR%/app/org.mozilla.firefox}
 
-          # Use flatpak list --installation to verify they are correctly indexed.
-          LIST_OUT=$(sudo flatpak list --installation="$FLATPAK_INSTALLATION" --columns=ref || true)
-          if ! echo "$LIST_OUT" | grep -q "org.mozilla.firefox"; then
-            echo "FAIL: flatpak list --installation did not show firefox"
-            echo "List output: $LIST_OUT"
-            sudo umount "$ROOT_DIR" || true
-            sudo umount "$VERIFY_DIR" || true
-            exit 1
+            # Use flatpak list --installation to verify they are correctly indexed.
+            LIST_OUT=$(sudo flatpak list --installation="$FLATPAK_INSTALLATION" --columns=ref || true)
+            if ! echo "$LIST_OUT" | grep -q "org.mozilla.firefox"; then
+              echo "FAIL: flatpak list --installation did not show firefox"
+              echo "List output: $LIST_OUT"
+              sudo umount "$ROOT_DIR" || true
+              sudo umount "$VERIFY_DIR" || true
+              exit 1
+            fi
+            echo "OK: Flatpaks verified in flatpak list"
+          else
+            echo "Skipping Flatpak verification for non-Fedora image: $IMAGE_NAME"
           fi
-          echo "OK: Flatpaks verified in flatpak list"
 
           sudo umount "$ROOT_DIR"
           sudo rmdir "$ROOT_DIR"

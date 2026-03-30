@@ -264,6 +264,11 @@ cat /tmp/ir/boot/bootupd-state.json
 sudo umount /tmp/ir
 ```
 
+## Future Architectural Considerations
+
+- **Move `images.json` to `fisherman`**: Currently, the image registry (`data/images.json`) lives in the `tuna-installer` frontend. In the future, it may make more sense to move this to the `fisherman` backend. This would allow `fisherman` to act as a universal registry of BootC images, containing not just the OCI references but also the specific installation requirements for each image (e.g., whether it requires manual user creation, specific kernel arguments, or filesystem defaults).
+- **Universal BootC Registry**: Evolving the image manifest into a standard format that other installers or tools could consume to understand the "metadata" of a BootC image.
+
 ---
 
 ## GitHub org context

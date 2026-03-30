@@ -69,6 +69,12 @@ jobs:
 
       - name: Generate recipe
         run: |
+          IMAGE_NAME="${{ matrix.image.name }}"
+          FLATPAKS="[]"
+          if [[ "$IMAGE_NAME" == *"bluefin"* || "$IMAGE_NAME" == *"yellowfin"* ]]; then
+            FLATPAKS='["org.mozilla.firefox"]'
+          fi
+
           cat > /tmp/recipe.json <<EOF
           {
             "disk": "${{ steps.loopdev.outputs.loopdev }}",
@@ -79,7 +85,7 @@ jobs:
             "encryption": {"type": "none"},
             "image": "${{ matrix.image.image }}",
             "hostname": "ci-test",
-            "flatpaks": ["org.mozilla.firefox"]
+            "flatpaks": $FLATPAKS
           }
           EOF
 
