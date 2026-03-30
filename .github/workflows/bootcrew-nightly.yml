@@ -207,10 +207,14 @@ jobs:
             exit 1
           fi
 
-          if grep -q "login:" "$LOG"; then
-            echo "PASS: login prompt found for $IMAGE_NAME"
+          # "login:" covers images with a getty on ttyS0.
+          # "Reached target.*Network" covers images that boot fully but present a
+          # firstboot OOBE wizard before a getty (e.g. arch-bootc timezone prompt).
+          # Both patterns appear only in real userspace, not in the initrd.
+          if grep -qE 'login:|Reached target.*(Network Name Lookups|multi-user|graphical)' "$LOG"; then
+            echo "PASS: boot success detected for $IMAGE_NAME"
           else
-            echo "FAIL: no login prompt found for $IMAGE_NAME"
+            echo "FAIL: no boot success indicator found for $IMAGE_NAME"
             echo "--- last 50 lines of boot log ---"
             tail -50 "$LOG"
             exit 1

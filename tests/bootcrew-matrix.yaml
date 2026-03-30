@@ -40,12 +40,15 @@ images:
     unified_storage: false
     selinux_disabled: false
 
-  - name: gentoo-bootc
-    image: ghcr.io/bootcrew/gentoo-bootc:latest
-    filesystem: xfs
-    composefs_backend: true
-    unified_storage: false
-    selinux_disabled: false
+  # gentoo-bootc disabled: consistently fails with missing blob in containers-storage
+  # (sha256:2443e8...) — likely a broken layer in the ghcr.io/bootcrew/gentoo-bootc image.
+  # Re-enable once upstream fixes the image.
+  # - name: gentoo-bootc
+  #   image: ghcr.io/bootcrew/gentoo-bootc:latest
+  #   filesystem: xfs
+  #   composefs_backend: true
+  #   unified_storage: false
+  #   selinux_disabled: false
 
   - name: debian-bootc
     image: ghcr.io/bootcrew/debian-bootc:latest
@@ -54,9 +57,13 @@ images:
     unified_storage: false
     selinux_disabled: false
 
-  - name: frostyard-snowloaded
-    image: ghcr.io/frostyard/snowloaded:latest
-    filesystem: xfs
-    composefs_backend: true
-    unified_storage: false
-    selinux_disabled: false
+  # frostyard-snowloaded disabled: bootc fails with "Filesystem does not support fs-verity"
+  # when creating the composefs image. The Ubuntu 24.04 runner's container scratch space
+  # is on tmpfs/overlayfs which does not support fs-verity. Re-enable once fisherman
+  # formats the root partition with verity support or the runner environment gains verity.
+  # - name: frostyard-snowloaded
+  #   image: ghcr.io/frostyard/snowloaded:latest
+  #   filesystem: xfs
+  #   composefs_backend: true
+  #   unified_storage: false
+  #   selinux_disabled: false
