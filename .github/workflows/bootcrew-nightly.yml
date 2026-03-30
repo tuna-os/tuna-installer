@@ -132,6 +132,22 @@ jobs:
           sudo umount "$VERIFY_DIR"
           echo "PASS: ${{ matrix.image.name }}"
 
+      - name: Patch serial console into bootloader entries
+        run: |
+          LOOPDEV="${{ steps.loopdev.outputs.loopdev }}"
+          BOOT_PART="${LOOPDEV}p2"
+          MNT=$(mktemp -d)
+          sudo mount "$BOOT_PART" "$MNT"
+          for conf in "$MNT"/loader/entries/*.conf; do
+            [ -f "$conf" ] || continue
+            if ! sudo grep -q "console=ttyS0" "$conf"; then
+              sudo sed -i 's/^options /options console=ttyS0,115200 /' "$conf"
+              echo "Patched: $(basename "$conf")"
+              sudo grep "^options" "$conf"
+            fi
+          done
+          sudo umount "$MNT"
+
       - name: Boot verification
         working-directory: ${{ github.workspace }}
         run: |
