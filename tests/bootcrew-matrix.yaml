@@ -16,12 +16,15 @@ images:
     unified_storage: false
     selinux_disabled: false
 
-  - name: gnomeos-bootc
-    image: ghcr.io/bootcrew/gnomeos-bootc:latest
-    filesystem: xfs
-    composefs_backend: true
-    unified_storage: false
-    selinux_disabled: false
+  # gnomeos-bootc disabled: consistently fails with missing blob in containers-storage
+  # (sha256:6d2d10...) — likely a broken layer in the ghcr.io/bootcrew/gnomeos-bootc image.
+  # Re-enable once upstream fixes the image.
+  # - name: gnomeos-bootc
+  #   image: ghcr.io/bootcrew/gnomeos-bootc:latest
+  #   filesystem: xfs
+  #   composefs_backend: true
+  #   unified_storage: false
+  #   selinux_disabled: false
 
   - name: opensuse-bootc
     image: ghcr.io/bootcrew/opensuse-bootc:latest

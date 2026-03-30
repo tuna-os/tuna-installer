@@ -161,7 +161,7 @@ jobs:
             -drive file="$LOOPDEV",format=raw,if=virtio \
             -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \
             -drive if=pflash,format=raw,snapshot=on,file="$OVMF_VARS" \
-            -serial stdio \
+            -serial mon:stdio \
             -nographic \
             -no-reboot 2>&1 | tee "$LOG"
           QEMU_EXIT=${PIPESTATUS[0]}
