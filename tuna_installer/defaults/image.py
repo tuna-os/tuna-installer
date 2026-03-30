@@ -88,7 +88,7 @@ def _load_manifest():
             pass
 
     # 5. Filesystem fallback for development (run from repo root).
-    dev_path = pathlib.Path(__file__).resolve().parent.parent.parent / "data" / "images.json"
+    dev_path = pathlib.Path(__file__).resolve().parent.parent.parent / "fisherman" / "data" / "images.json"
     try:
         manifest = json.loads(dev_path.read_text())
         logger.info(f"Loaded image manifest from dev path: {dev_path}")

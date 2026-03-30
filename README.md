@@ -25,7 +25,7 @@ curl -Lo tuna-installer.flatpak \
 
 The installer's image catalog is defined in a single JSON file:
 
-**[`data/images.json`](data/images.json)**
+**[`fisherman/data/images.json`](fisherman/data/images.json)**
 
 Adding a new image is as simple as adding an entry to that file. The structure is a recursive tree of groups and leaves:
 
@@ -48,7 +48,7 @@ Adding a new image is as simple as adding an entry to that file. The structure i
 ```
 
 - **`flatpaks`** — list of Flatpak app IDs to install on the target system. Inherited by children if not overridden.
-- **`icon`** — `resource:///org/tunaos/Installer/images/name.svg`, an absolute file path, or an XDG icon name. Drop your SVG/PNG into `data/images/` and add it to `tuna_installer/tuna-installer.gresource.xml`.
+- **`icon`** — `resource:///org/tunaos/Installer/images/name.svg`, an absolute file path, or an XDG icon name. Drop your SVG/PNG into `fisherman/data/images/` and add it to `tuna_installer/tuna-installer.gresource.xml`.
 - Distros can ship a **fully custom catalog** at `/etc/tuna-installer/images.json` — it overrides the bundled one entirely.
 
 PRs to add new images, icons, or flatpak lists are very welcome!

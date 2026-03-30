@@ -80,7 +80,7 @@ CI checks out submodules recursively — always verify CI passes after both push
 
 ## Image catalog
 
-`data/images.json` is a recursive JSON tree of distro groups/leaves. Distros can override it at `/etc/tuna-installer/images.json` (system) or `$XDG_CONFIG_HOME/tuna-installer/images.json` (user).
+`fisherman/data/images.json` is a recursive JSON tree of distro groups/leaves. Distros can override it at `/etc/tuna-installer/images.json` (system) or `$XDG_CONFIG_HOME/tuna-installer/images.json` (user).
 
 ## Known issues
 

@@ -46,16 +46,16 @@
     <file>assets/ready.svg</file>
     <file>assets/containerized.svg</file>
     <file>assets/unsupported.svg</file>
-    <file alias="images.json">../data/images.json</file>
-    <file alias="images/bluefin.png">../data/images/bluefin.png</file>
-    <file alias="images/bluefin-lts.png">../data/images/bluefin-lts.png</file>
-    <file preprocess="xml-stripblanks" alias="images/aurora.svg">../data/images/aurora.svg</file>
-    <file preprocess="xml-stripblanks" alias="images/bazzite.svg">../data/images/bazzite.svg</file>
-    <file preprocess="xml-stripblanks" alias="images/tunaos.svg">../data/images/tunaos.svg</file>
-    <file preprocess="xml-stripblanks" alias="images/bonito.svg">../data/images/bonito.svg</file>
-    <file preprocess="xml-stripblanks" alias="images/skipjack.svg">../data/images/skipjack.svg</file>
-    <file preprocess="xml-stripblanks" alias="images/albacore.svg">../data/images/albacore.svg</file>
-    <file preprocess="xml-stripblanks" alias="images/yellowfin.svg">../data/images/yellowfin.svg</file>
+    <file alias="images.json">../fisherman/data/images.json</file>
+    <file alias="images/bluefin.png">../fisherman/data/images/bluefin.png</file>
+    <file alias="images/bluefin-lts.png">../fisherman/data/images/bluefin-lts.png</file>
+    <file preprocess="xml-stripblanks" alias="images/aurora.svg">../fisherman/data/images/aurora.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/bazzite.svg">../fisherman/data/images/bazzite.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/tunaos.svg">../fisherman/data/images/tunaos.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/bonito.svg">../fisherman/data/images/bonito.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/skipjack.svg">../fisherman/data/images/skipjack.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/albacore.svg">../fisherman/data/images/albacore.svg</file>
+    <file preprocess="xml-stripblanks" alias="images/yellowfin.svg">../fisherman/data/images/yellowfin.svg</file>
   </gresource>
   <gresource prefix="/org/tunaos/Installer/icons/scalable/actions/">
     <file preprocess="xml-stripblanks">../data/icons/hicolor/symbolic/actions/background-app-ghost-symbolic.svg</file>

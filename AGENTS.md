@@ -270,8 +270,9 @@ sudo umount /tmp/ir
 
 ## Future Architectural Considerations
 
-- **Move `images.json` to `fisherman`**: Currently, the image registry (`data/images.json`) lives in the `tuna-installer` frontend. In the future, it may make more sense to move this to the `fisherman` backend. This would allow `fisherman` to act as a universal registry of BootC images, containing not just the OCI references but also the specific installation requirements for each image (e.g., whether it requires manual user creation, specific kernel arguments, or filesystem defaults).
+- **Move `images.json` to `fisherman` (Done)**: The image registry (`fisherman/data/images.json`) now lives in the `fisherman` backend. This allows `fisherman` to act as a universal registry of BootC images, containing not just the OCI references but also the specific installation requirements for each image (e.g., whether it requires manual user creation, specific kernel arguments, or filesystem defaults).
 - **Universal BootC Registry**: Evolving the image manifest into a standard format that other installers or tools could consume to understand the "metadata" of a BootC image.
+- **Dynamic Installation Carousel**: The `images.json` should eventually include a `carousel` property for each image or group, allowing for distribution-specific slideshows during the installation process, with support for inheritance and `/etc` overrides.
 
 ---
 
