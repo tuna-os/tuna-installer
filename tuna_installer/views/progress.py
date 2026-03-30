@@ -25,6 +25,9 @@ from gettext import gettext as _
 
 logger = logging.getLogger("Installer::Progress")
 
+# Matches "Pulling image: layer 23/71" substep messages from fisherman.
+_RE_LAYER_PROGRESS = re.compile(r"Pulling image: layer (\d+)/(\d+)")
+
 _IN_FLATPAK = os.path.exists("/.flatpak-info")
 _LIVE_ISO = not _IN_FLATPAK and os.path.exists("/run/ostree-booted")
 
@@ -114,6 +117,7 @@ class VanillaProgress(Gtk.Box):
         self.__current_total = 0
         self.__current_step_name = ""
         self.__current_weight_pct = 0
+        self.__current_cumulative_pct = 0
         self.__seen_substeps = set()  # deduplicate substep messages
 
         self.__build_ui()
@@ -334,6 +338,7 @@ class VanillaProgress(Gtk.Box):
                     continue
                 cumulative_pct = event.get("cumulative_pct", 0)
                 self.__current_weight_pct = event.get("weight_pct", 0)
+                self.__current_cumulative_pct = cumulative_pct
                 fraction = cumulative_pct / 100.0
                 self.__current_step = step
                 self.__current_total = total
@@ -349,7 +354,17 @@ class VanillaProgress(Gtk.Box):
 
             elif event_type == "substep":
                 msg = event.get("message", "")
-                if msg and msg not in self.__seen_substeps:
+                if not msg:
+                    continue
+                # Interpolate bar within the current step's weight for layer progress.
+                m = _RE_LAYER_PROGRESS.match(msg)
+                if m and self.__current_weight_pct > 0:
+                    done = int(m.group(1))
+                    total_layers = int(m.group(2))
+                    sub_frac = done / total_layers
+                    bar_frac = (self.__current_cumulative_pct + sub_frac * self.__current_weight_pct) / 100.0
+                    self.progressbar.set_fraction(min(bar_frac, 1.0))
+                if msg not in self.__seen_substeps:
                     self.__seen_substeps.add(msg)
                     if self.__current_step:
                         self.progressbar_text.set_label(
