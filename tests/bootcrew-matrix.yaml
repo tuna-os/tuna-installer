@@ -57,13 +57,11 @@ images:
     unified_storage: false
     selinux_disabled: false
 
-  # frostyard-snowloaded disabled: bootc fails with "Filesystem does not support fs-verity"
-  # when creating the composefs image. The Ubuntu 24.04 runner's container scratch space
-  # is on tmpfs/overlayfs which does not support fs-verity. Re-enable once fisherman
-  # formats the root partition with verity support or the runner environment gains verity.
-  # - name: frostyard-snowloaded
-  #   image: ghcr.io/frostyard/snowloaded:latest
-  #   filesystem: xfs
-  #   composefs_backend: true
-  #   unified_storage: false
-  #   selinux_disabled: false
+  # frostyard-snowloaded: if composefs_backend=true hits fs-verity errors (runner
+  # scratch space is tmpfs/overlayfs), fall back to ostree mode (composefs_backend=false).
+  - name: frostyard-snowloaded
+    image: ghcr.io/frostyard/snowloaded:latest
+    filesystem: xfs
+    composefs_backend: false
+    unified_storage: false
+    selinux_disabled: false
