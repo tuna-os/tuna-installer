@@ -235,6 +235,10 @@ Always verify CI passes after pushing both submodule + parent repo commits.
   "Reading keyfile /var/roothome/- failed". Non-fatal (password fallback works).
 - **`bootc install finalize` is a no-op upstream**: We replicate the real finalization
   ops in `disk.FinalizeFilesystem()` ourselves (fstrim, remount ro, fsfreeze/thaw).
+- **Set BootNext on Reboot**: The "Reboot Now" button should temporarily set the 
+  boot drive to the newly installed drive for the next boot (via `efibootmgr --bootnext`). 
+  This ensures the system doesn't reboot back into the installer if the installation 
+  media is still plugged in.
 
 ---
 
