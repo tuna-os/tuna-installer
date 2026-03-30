@@ -130,6 +130,14 @@ class VanillaConfirm(Adw.Bin):
                                     "drive-harddisk-system-symbolic",
                                 )
                             )
+                elif key == "hostname":
+                    self.active_widgets.append(
+                        VanillaChoiceEntry(
+                            _("Hostname"),
+                            value,
+                            "network-server-symbolic",
+                        )
+                    )
                 elif key == "selected_image":
                     pn = final.get("pretty_name") or value
                     pretty_name = pn

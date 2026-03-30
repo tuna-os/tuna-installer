@@ -79,7 +79,7 @@ jobs:
             "encryption": {"type": "none"},
             "image": "${{ matrix.image.image }}",
             "hostname": "ci-test",
-            "flatpaks": []
+            "flatpaks": ["org.mozilla.firefox"]
           }
           EOF
 

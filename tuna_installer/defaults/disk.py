@@ -672,6 +672,7 @@ class VanillaDefaultDisk(Adw.Bin):
     group_disks = Gtk.Template.Child()
     disk_space_err_box = Gtk.Template.Child()
     disk_space_err_label = Gtk.Template.Child()
+    hostname_entry = Gtk.Template.Child()
 
     _VIRTUAL_DISK_IMG = "/var/home/james/tuna-virtual-disk.img"
     _VIRTUAL_DISK_SIZE = "50G"
@@ -807,7 +808,10 @@ class VanillaDefaultDisk(Adw.Bin):
             return None
 
     def get_finals(self):
-        result = {"disk": self.__partition_recipe}
+        result = {
+            "disk": self.__partition_recipe,
+            "hostname": self.hostname_entry.get_text().strip() or "tunaos",
+        }
         if self.__use_virtual_disk:
             result["virtual_disk_img"] = self._VIRTUAL_DISK_IMG
             result["virtual_disk_loop"] = getattr(self, "_VanillaDefaultDisk__loop_device", None)
