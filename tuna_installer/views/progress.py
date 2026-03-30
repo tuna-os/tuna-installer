@@ -113,6 +113,7 @@ class VanillaProgress(Gtk.Box):
         self.__current_step = 0
         self.__current_total = 0
         self.__current_step_name = ""
+        self.__current_weight_pct = 0
         self.__seen_substeps = set()  # deduplicate substep messages
 
         self.__build_ui()
@@ -331,7 +332,9 @@ class VanillaProgress(Gtk.Box):
                 # Only advance forward — ignore stale/duplicate steps.
                 if step <= self.__current_step and self.__current_step > 0:
                     continue
-                fraction = step / max(total, 1)
+                cumulative_pct = event.get("cumulative_pct", 0)
+                self.__current_weight_pct = event.get("weight_pct", 0)
+                fraction = cumulative_pct / 100.0
                 self.__current_step = step
                 self.__current_total = total
                 self.__current_step_name = name
