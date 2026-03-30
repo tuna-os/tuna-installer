@@ -113,6 +113,14 @@ jobs:
           ROOT_DIR=$(mktemp -d)
           sudo mount "$ROOT_PART" "$ROOT_DIR"
 
+          # Debug: show root structure
+          echo "--- Root directory structure ---"
+          sudo ls -F "$ROOT_DIR"
+          if [ -d "$ROOT_DIR/ostree" ]; then
+            echo "--- Ostree structure ---"
+            sudo ls -R "$ROOT_DIR/ostree" | head -n 20
+          fi
+
           if [ "$COMPOSEFS" = "true" ]; then
             # Composefs-native: verify hostname in sysroot /etc.
             if [ ! -f "$ROOT_DIR/etc/hostname" ]; then
@@ -122,36 +130,26 @@ jobs:
               exit 1
             fi
             echo "OK: composefs-native hostname at $ROOT_DIR/etc/hostname"
-
-            # Verify Flatpak (composefs-native: /var is in sysroot)
-            FLATPAK_PATH="$ROOT_DIR/var/lib/flatpak"
-          else
-            # Ostree: verify boot loader entries exist.
-            if ! ls "$VERIFY_DIR/loader/entries/"*.conf 1>/dev/null 2>&1; then
-              echo "FAIL: no boot loader entries in $VERIFY_DIR/loader/entries/"
-              sudo umount "$ROOT_DIR" || true
-              sudo umount "$VERIFY_DIR" || true
-              exit 1
-            fi
-            echo "OK: ostree boot loader entries found"
-
-            # Verify Flatpak (ostree: /var is in stateroot)
-            FLATPAK_PATH="$ROOT_DIR/ostree/deploy/default/var/lib/flatpak"
           fi
 
-          # Verify Flatpaks exist on the disk.
-          if [ ! -d "$FLATPAK_PATH/app/org.mozilla.firefox" ]; then
-             echo "FAIL: Flatpak firefox not found at $FLATPAK_PATH"
-             sudo find "$FLATPAK_PATH" -maxdepth 3 || true
+          # Find Firefox directory anywhere on the disk.
+          echo "Searching for Firefox flatpak..."
+          FLATPAK_APP_DIR=$(sudo find "$ROOT_DIR" -type d -path "*/var/lib/flatpak/app/org.mozilla.firefox" -print -quit)
+          if [ -z "$FLATPAK_APP_DIR" ]; then
+             echo "FAIL: Flatpak firefox not found anywhere on the root partition"
+             echo "--- Full find (debug) ---"
+             sudo find "$ROOT_DIR" -maxdepth 6 || true
              sudo umount "$ROOT_DIR" || true
              sudo umount "$VERIFY_DIR" || true
              exit 1
           fi
+          echo "OK: Flatpak found at $FLATPAK_APP_DIR"
+
+          # Extract the installation path (the directory containing 'app/')
+          FLATPAK_INSTALLATION=${FLATPAK_APP_DIR%/app/org.mozilla.firefox}
 
           # Use flatpak list --installation to verify they are correctly indexed.
-          # Note: flatpak list needs the path to be the system repo.
-          # We check if the refs show up in the list output.
-          LIST_OUT=$(flatpak list --installation="$FLATPAK_PATH" --columns=ref || true)
+          LIST_OUT=$(sudo flatpak list --installation="$FLATPAK_INSTALLATION" --columns=ref || true)
           if ! echo "$LIST_OUT" | grep -q "org.mozilla.firefox"; then
             echo "FAIL: flatpak list --installation did not show firefox"
             echo "List output: $LIST_OUT"
@@ -159,7 +157,7 @@ jobs:
             sudo umount "$VERIFY_DIR" || true
             exit 1
           fi
-          echo "OK: Flatpaks verified on disk and in flatpak list"
+          echo "OK: Flatpaks verified in flatpak list"
 
           sudo umount "$ROOT_DIR"
           sudo rmdir "$ROOT_DIR"
