@@ -211,13 +211,30 @@ jobs:
           # "Reached target.*Network" covers images that boot fully but present a
           # firstboot OOBE wizard before a getty (e.g. arch-bootc timezone prompt).
           # Both patterns appear only in real userspace, not in the initrd.
+          BOOT_OK=0
           if grep -qE 'login:|Reached target.*(Network Name Lookups|multi-user|graphical)' "$LOG"; then
-            echo "PASS: boot success detected for $IMAGE_NAME"
-          else
+            BOOT_OK=1
+          fi
+
+          # Scan for critical runtime failures even when boot appeared successful.
+          # - systemd-coredump: a process crashed and dumped core (e.g. gnome-session)
+          # - [FAILED] Failed to start: a systemd unit failed to start
+          # - Kernel panic: obvious
+          FAILURES=$(grep -E 'systemd-coredump.*dumped core|\[FAILED\] Failed to start|Kernel panic' "$LOG" || true)
+
+          if [ "$BOOT_OK" -eq 0 ]; then
             echo "FAIL: no boot success indicator found for $IMAGE_NAME"
             echo "--- last 50 lines of boot log ---"
             tail -50 "$LOG"
             exit 1
+          elif [ -n "$FAILURES" ]; then
+            echo "FAIL: boot reached userspace but critical failures detected for $IMAGE_NAME:"
+            echo "$FAILURES"
+            echo "--- last 50 lines of boot log ---"
+            tail -50 "$LOG"
+            exit 1
+          else
+            echo "PASS: boot success, no critical failures for $IMAGE_NAME"
           fi
 
       - name: Cleanup
