@@ -2,6 +2,13 @@
 # Used by both bootcrew-fast.yml (PR gate) and bootcrew-nightly.yml (full install).
 # Add new images here; both workflows pick them up automatically.
 images:
+  - name: bluefin-lts
+    image: ghcr.io/ublue-os/bluefin:lts
+    filesystem: xfs
+    composefs_backend: false
+    unified_storage: false
+    selinux_disabled: false
+
   - name: yellowfin-gnome50
     image: ghcr.io/tuna-os/yellowfin:gnome50
     filesystem: xfs
