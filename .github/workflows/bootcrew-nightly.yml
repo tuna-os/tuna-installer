@@ -143,11 +143,21 @@ jobs:
             local patched=0
             for conf in "$MNT"/loader/entries/*.conf; do
               [ -f "$conf" ] || continue
+              # Add console=ttyS0 if missing.
               if ! sudo grep -q "console=ttyS0" "$conf"; then
                 sudo sed -i 's/^options /options console=ttyS0,115200 /' "$conf"
+                patched=1
+              fi
+              # Add root=/dev/vda3 if missing: composefs images omit root= and rely
+              # on GPT auto-discovery (requires partition type root-x86-64), which
+              # won't work because fisherman creates type=linux partitions.
+              if ! sudo grep -q "root=" "$conf"; then
+                sudo sed -i 's/^options /options root=\/dev\/vda3 /' "$conf"
+                patched=1
+              fi
+              if [ "$patched" -eq 1 ]; then
                 echo "Patched ($label): $(basename "$conf")"
                 sudo grep "^options" "$conf"
-                patched=1
               fi
             done
             [ "$patched" -eq 0 ] && echo "No BLS entries to patch on $label"
