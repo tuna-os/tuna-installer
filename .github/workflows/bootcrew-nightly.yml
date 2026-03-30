@@ -135,18 +135,27 @@ jobs:
       - name: Patch serial console into bootloader entries
         run: |
           LOOPDEV="${{ steps.loopdev.outputs.loopdev }}"
-          BOOT_PART="${LOOPDEV}p2"
-          MNT=$(mktemp -d)
-          sudo mount "$BOOT_PART" "$MNT"
-          for conf in "$MNT"/loader/entries/*.conf; do
-            [ -f "$conf" ] || continue
-            if ! sudo grep -q "console=ttyS0" "$conf"; then
-              sudo sed -i 's/^options /options console=ttyS0,115200 /' "$conf"
-              echo "Patched: $(basename "$conf")"
-              sudo grep "^options" "$conf"
-            fi
-          done
-          sudo umount "$MNT"
+          patch_entries() {
+            local part="$1" label="$2"
+            local MNT
+            MNT=$(mktemp -d)
+            sudo mount "$part" "$MNT" || { echo "Cannot mount $label ($part), skipping"; rmdir "$MNT"; return; }
+            local patched=0
+            for conf in "$MNT"/loader/entries/*.conf; do
+              [ -f "$conf" ] || continue
+              if ! sudo grep -q "console=ttyS0" "$conf"; then
+                sudo sed -i 's/^options /options console=ttyS0,115200 /' "$conf"
+                echo "Patched ($label): $(basename "$conf")"
+                sudo grep "^options" "$conf"
+                patched=1
+              fi
+            done
+            [ "$patched" -eq 0 ] && echo "No BLS entries to patch on $label"
+            sudo umount "$MNT"
+            rmdir "$MNT"
+          }
+          patch_entries "${LOOPDEV}p1" "EFI"
+          patch_entries "${LOOPDEV}p2" "boot"
 
       - name: Boot verification
         working-directory: ${{ github.workspace }}
@@ -169,10 +178,11 @@ jobs:
             exit 1
           fi
 
-          echo "Booting $IMAGE_NAME with QEMU+OVMF (timeout 180s)..."
+          echo "Booting $IMAGE_NAME with QEMU+OVMF (timeout 240s)..."
           echo "OVMF_CODE=$OVMF_CODE  OVMF_VARS=$OVMF_VARS"
-          sudo timeout 180 qemu-system-x86_64 \
+          sudo timeout 240 qemu-system-x86_64 \
             -enable-kvm \
+            -cpu host \
             -m 2G \
             -drive file="$LOOPDEV",format=raw,if=virtio \
             -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \
