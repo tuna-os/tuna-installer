@@ -57,11 +57,14 @@ images:
     unified_storage: false
     selinux_disabled: false
 
-  # frostyard-snowloaded: if composefs_backend=true hits fs-verity errors (runner
-  # scratch space is tmpfs/overlayfs), fall back to ostree mode (composefs_backend=false).
-  - name: frostyard-snowloaded
-    image: ghcr.io/frostyard/snowloaded:latest
-    filesystem: xfs
-    composefs_backend: false
-    unified_storage: false
-    selinux_disabled: false
+  # frostyard-snowloaded disabled: image bundles an older libostree built without
+  # composefs support, but the Ubuntu 24.04 runner has the composefs kernel module
+  # loaded. libostree sees composefs available at runtime and tries to use it, then
+  # fails with "composefs: enabled at runtime, but support is not compiled in".
+  # Re-enable once the image ships a libostree with composefs compiled in.
+  # - name: frostyard-snowloaded
+  #   image: ghcr.io/frostyard/snowloaded:latest
+  #   filesystem: xfs
+  #   composefs_backend: false
+  #   unified_storage: false
+  #   selinux_disabled: false
