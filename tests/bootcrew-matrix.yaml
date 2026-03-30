@@ -32,3 +32,31 @@ images:
     composefs_backend: true
     unified_storage: false
     selinux_disabled: false
+
+  - name: arch-bootc
+    image: ghcr.io/bootcrew/arch-bootc:latest
+    filesystem: xfs
+    composefs_backend: true
+    unified_storage: false
+    selinux_disabled: false
+
+  - name: gentoo-bootc
+    image: ghcr.io/bootcrew/gentoo-bootc:latest
+    filesystem: xfs
+    composefs_backend: true
+    unified_storage: false
+    selinux_disabled: false
+
+  - name: debian-bootc
+    image: ghcr.io/bootcrew/debian-bootc:latest
+    filesystem: xfs
+    composefs_backend: true
+    unified_storage: false
+    selinux_disabled: false
+
+  - name: frostyard-snowloaded
+    image: ghcr.io/frostyard/snowloaded:latest
+    filesystem: xfs
+    composefs_backend: true
+    unified_storage: false
+    selinux_disabled: false
