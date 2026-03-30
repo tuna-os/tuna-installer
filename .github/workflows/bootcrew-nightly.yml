@@ -79,6 +79,12 @@ jobs:
           }
           EOF
 
+      - name: Pre-pull image via podman
+        # Pull with podman first so containers-storage is in a consistent state.
+        # skopeo copy (used by fisherman) then sees all layers already present and
+        # skips them — avoiding a known blob-missing issue on Ubuntu 24.04 runners.
+        run: sudo podman pull ${{ matrix.image.image }}
+
       - name: Run fisherman
         run: sudo /tmp/fisherman /tmp/recipe.json
 
