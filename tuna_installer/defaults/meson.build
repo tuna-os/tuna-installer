@@ -14,6 +14,8 @@ sources = [
   'vm.py',
   'conn_check.py',
   'network.py',
+  'theme.py',
+  'user.py',
 ]
 
 install_data(sources, install_dir: defaultsdir)
