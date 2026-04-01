@@ -199,11 +199,63 @@ ssh james@192.168.0.119 "tail -f ~/.cache/tuna-installer/fisherman-output.log"
 
 - **Every push to `main`** triggers `.github/workflows/flatpak.yml` which builds
   the Flatpak and publishes it as the `continuous` pre-release on GitHub.
+- **`.github/workflows/python-test.yml`** runs on every push: 30 unit tests
+  (no display) + 14 GTK UI integration tests (Xvfb).
 - **Tagged pushes** (`v*`) publish a named release.
 - Container: `ghcr.io/flathub-infra/flatpak-github-actions:gnome-50`
 - The submodule is checked out recursively by CI (`submodules: recursive`).
 
 Always verify CI passes after pushing both submodule + parent repo commits.
+
+---
+
+## Testing
+
+### Test suite layout
+
+```
+tests/
+├── unit/
+│   └── test_processor.py   ← 30 pure-Python tests for processor.py (no display)
+└── ui/
+    ├── conftest.py          ← GResource loader + Adw.init() for headless GTK
+    └── test_wizard.py       ← 14 GTK integration tests (real widgets via Xvfb)
+```
+
+Run unit tests:
+```bash
+pytest tests/unit/ -v
+```
+
+Run UI tests (requires a display — use Xvfb in CI or a live X session locally):
+```bash
+xvfb-run -a pytest tests/ui/ -v
+```
+
+### Rules for keeping tests in sync with UI changes
+
+**When you change `tuna_installer/utils/processor.py`:**
+- Update `tests/unit/test_processor.py` to cover new fields or changed logic.
+- Every new recipe field emitted by `processor.py` should have at least one
+  parametrized test asserting the correct JSON value in the output recipe.
+
+**When you change a wizard step's `get_finals()` output (e.g. `defaults/image.py`,
+`defaults/disk.py`, `defaults/encryption.py`, `defaults/user.py`):**
+- Update `tests/ui/test_wizard.py` if the changed step is covered there.
+- If a new `get_finals()` key is added, add an assertion for it in the
+  relevant `TestXxxStep` class.
+
+**When you add a new wizard step:**
+- Add the step to `_SYS_RECIPE["steps"]` in `tests/ui/test_wizard.py` only if
+  its template widgets are available in the CI libadwaita version (Ubuntu 24.04
+  ships libadwaita 1.5.x — `Adw.ButtonRow` and other ≥ 1.6 widgets will fail).
+  If in doubt, leave the step out of the test recipe and test via unit tests only.
+- Add unit test coverage in `test_processor.py` for any new recipe fields the
+  step produces.
+
+**When you change `fisherman/fisherman/internal/recipe/recipe.go`:**
+- Update `fisherman/fisherman/internal/recipe/recipe_test.go` — add valid and
+  invalid cases for any new fields or validation rules.
 
 ---
 
@@ -222,6 +274,10 @@ Always verify CI passes after pushing both submodule + parent repo commits.
 | `tuna_installer/views/done.py` | Final screen, reboot button, log viewer |
 | `flatpak/org.tunaos.Installer.json` | Flatpak manifest (runtime, finish-args, Go version) |
 | `.github/workflows/flatpak.yml` | CI build + publish workflow |
+| `.github/workflows/python-test.yml` | CI unit + GTK UI integration tests |
+| `tests/unit/test_processor.py` | 30 unit tests for processor.py (no display needed) |
+| `tests/ui/conftest.py` | GResource loader + `Adw.init()` for headless GTK tests |
+| `tests/ui/test_wizard.py` | 14 GTK integration tests (image step finals, E2E recipe gen) |
 
 ---
 
