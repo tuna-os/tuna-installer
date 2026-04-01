@@ -103,6 +103,10 @@ class VanillaWindow(Adw.ApplicationWindow):
         self.install_mode = mode
         self.__build_ui(True, mode)
 
+    def rebuild_ui_after_image(self):
+        """Rebuild non-protected steps so they can react to the image selection."""
+        self.__build_ui(True, self.install_mode)
+
     def __build_ui(self, rebuild=False, mode=0):
         property_list = self.__builder.property_list
 

@@ -115,6 +115,9 @@ class Builder:
                 )
                 logger.info(_("(%s) Widgets initialized") % key)
                 self.__register_widgets.append(_widget)
+                # Expose the image step on the window so later steps can query it.
+                if step["template"] == "image":
+                    self.__window.image_step = _widget
             self.__property_list.append(step)
 
     def get_finals(self):

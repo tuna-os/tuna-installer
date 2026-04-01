@@ -226,10 +226,11 @@ class VanillaDefaultImage(Adw.Bin):
         self.__selected_imgref = _DEFAULT_IMAGE
         self.__selected_flatpaks = None  # per-image flatpak list (None = use fallback)
         self.__selected_carousel = None  # per-image carousel slides (None = use recipe default)
+        self.__selected_needs_user_creation = False
         self.__selected_icon = None      # icon spec for selected image (str or None)
         self.__selected_pretty_name = _imgref_to_pretty_name(_DEFAULT_IMAGE)
         self.__all_expanders = []   # every ExpanderRow widget
-        self.__leaf_rows = []       # [(row, check, imgref, flatpaks, icon, search_str, [ancestor_exps])]
+        self.__leaf_rows = []       # [(row, check, imgref, flatpaks, icon, carousel, needs_user, search_str, [ancestor_exps])]
 
         # Hidden anchor for the radio CheckButton group.
         self.__radio_anchor = Gtk.CheckButton()
@@ -240,10 +241,16 @@ class VanillaDefaultImage(Adw.Bin):
         self.search_entry.connect("search-changed", self.__on_search_changed)
         self.row_custom.connect("notify::expanded", self.__on_custom_toggled)
         self.image_url_entry.connect("changed", self.__on_url_changed)
-        self.btn_next.connect("clicked", self.__window.next)
+        self.btn_next.connect("clicked", self.__on_next_clicked)
 
         self.__select_default()
         self.__update_btn_next()
+
+    def __on_next_clicked(self, *args):
+        # Rebuild downstream steps so they can react to the selected image
+        # (e.g. show/hide user-creation step based on needs_user_creation).
+        self.__window.rebuild_ui_after_image()
+        self.__window.next()
 
     # ── Recursive tree construction ───────────────────────────────────────────
 
@@ -265,25 +272,24 @@ class VanillaDefaultImage(Adw.Bin):
                     img.get("description", ""), "", [exp])
             self.list_images.append(exp)
 
-    def __build_node(self, parent, node, ancestors, search_ctx, flatpaks_ctx=None, icon_ctx=None, carousel_ctx=None):
+    def __build_node(self, parent, node, ancestors, search_ctx, flatpaks_ctx=None, icon_ctx=None, carousel_ctx=None, needs_user_ctx=False):
         """Recursively build ExpanderRow groups and ActionRow leaves."""
-        # Inherit flatpaks, icon, and carousel from nearest ancestor that defines them.
-        # flatpaks may be a list of app IDs or a URL string (fetched at selection time).
+        # Inherit flatpaks, icon, carousel, and needs_user_creation from nearest ancestor.
         node_flatpaks = node.get("flatpaks", flatpaks_ctx)
         node_icon = node.get("icon", icon_ctx)
         node_carousel = node.get("carousel", carousel_ctx)
+        node_needs_user = node.get("needs_user_creation", needs_user_ctx)
 
         if "imgref" in node:
             self.__add_leaf(parent, node["name"], node["imgref"],
                             node.get("desc", ""), search_ctx, ancestors,
-                            node_flatpaks, node_icon, node_carousel)
+                            node_flatpaks, node_icon, node_carousel, node_needs_user)
             return
 
         exp = Adw.ExpanderRow(title=node["name"])
         if "subtitle" in node:
             exp.set_subtitle(node["subtitle"])
 
-        # Group icon — only shown if the node explicitly defines one (not inherited).
         icon_spec = node.get("icon")
         if icon_spec:
             img = _make_icon(icon_spec, size=32)
@@ -299,7 +305,7 @@ class VanillaDefaultImage(Adw.Bin):
         child_ancestors = ancestors + [exp]
 
         for child in node.get("children", []):
-            self.__build_node(exp, child, child_ancestors, child_ctx, node_flatpaks, node_icon, node_carousel)
+            self.__build_node(exp, child, child_ancestors, child_ctx, node_flatpaks, node_icon, node_carousel, node_needs_user)
 
         if parent is self.list_images:
             parent.append(exp)
@@ -307,7 +313,7 @@ class VanillaDefaultImage(Adw.Bin):
             parent.add_row(exp)
 
     def __add_leaf(self, parent, name, imgref, desc, search_ctx, ancestors,
-                   flatpaks=None, icon=None, carousel=None):
+                   flatpaks=None, icon=None, carousel=None, needs_user=False):
         search_str = f"{search_ctx} {name} {desc} {imgref}".lower()
 
         row = Adw.ActionRow(title=name, subtitle=imgref)
@@ -319,7 +325,7 @@ class VanillaDefaultImage(Adw.Bin):
         check.set_group(self.__radio_anchor)
         row.add_prefix(check)
         row.set_activatable_widget(check)
-        check.connect("toggled", self.__on_check_toggled, imgref, flatpaks, icon, carousel)
+        check.connect("toggled", self.__on_check_toggled, imgref, flatpaks, icon, carousel, needs_user)
 
         # Leaf icon — only for nodes that explicitly define one (e.g. TunaOS variants).
         if icon:
@@ -328,10 +334,10 @@ class VanillaDefaultImage(Adw.Bin):
                 row.add_suffix(img)
 
         parent.add_row(row)
-        self.__leaf_rows.append((row, check, imgref, flatpaks, icon, carousel, search_str, list(ancestors)))
+        self.__leaf_rows.append((row, check, imgref, flatpaks, icon, carousel, needs_user, search_str, list(ancestors)))
 
     def __select_default(self):
-        for _row, check, imgref, _flatpaks, _icon, _carousel, _search, ancestors in self.__leaf_rows:
+        for _row, check, imgref, _flatpaks, _icon, _carousel, _needs_user, _search, ancestors in self.__leaf_rows:
             if imgref == _DEFAULT_IMAGE:
                 check.set_active(True)
                 for exp in ancestors:
@@ -342,11 +348,12 @@ class VanillaDefaultImage(Adw.Bin):
 
     # ── Selection handlers ────────────────────────────────────────────────────
 
-    def __on_check_toggled(self, check, imgref, flatpaks, icon, carousel):
+    def __on_check_toggled(self, check, imgref, flatpaks, icon, carousel, needs_user):
         if check.get_active():
             self.__selected_imgref = imgref
             self.__selected_icon = icon
             self.__selected_carousel = carousel
+            self.__selected_needs_user_creation = needs_user
             self.__selected_pretty_name = _imgref_to_pretty_name(imgref)
             # flatpaks may be a list of app IDs or a URL string pointing to a remote list.
             if isinstance(flatpaks, str) and flatpaks.startswith("http"):
@@ -364,6 +371,7 @@ class VanillaDefaultImage(Adw.Bin):
             self.__selected_imgref = None
             self.__selected_icon = None
             self.__selected_carousel = None
+            self.__selected_needs_user_creation = False
             self.__selected_pretty_name = None
         self.__update_btn_next()
 
@@ -385,14 +393,14 @@ class VanillaDefaultImage(Adw.Bin):
             for exp in self.__all_expanders:
                 exp.set_visible(True)
                 exp.set_expanded(False)
-            for row, _, _, _, _, _, _, _ in self.__leaf_rows:
+            for row, _, _, _, _, _, _, _, _ in self.__leaf_rows:
                 row.set_visible(True)
             self.__expand_default_path()
             return
 
         # Determine which leaves match and which expanders are needed.
         visible_expanders = set()
-        for row, _, _, _flatpaks, _icon, _carousel, search_str, ancestors in self.__leaf_rows:
+        for row, _, _, _flatpaks, _icon, _carousel, _needs_user, search_str, ancestors in self.__leaf_rows:
             if query in search_str:
                 row.set_visible(True)
                 for exp in ancestors:
@@ -408,7 +416,7 @@ class VanillaDefaultImage(Adw.Bin):
                 exp.set_visible(False)
 
     def __expand_default_path(self):
-        for _, _, imgref, _, _, _, _, ancestors in self.__leaf_rows:
+        for _, _, imgref, _, _, _, _, _, ancestors in self.__leaf_rows:
             if imgref == _DEFAULT_IMAGE:
                 for exp in ancestors:
                     exp.set_expanded(True)
@@ -433,6 +441,11 @@ class VanillaDefaultImage(Adw.Bin):
         """True when the manifest contains only one selectable image."""
         return _LEAF_COUNT <= 1
 
+    @property
+    def selected_needs_user_creation(self) -> bool:
+        """True if the selected image requires an explicit user creation step."""
+        return self.__selected_needs_user_creation
+
     def test_auto_advance(self):
         self.btn_next.emit("clicked")
 
@@ -445,6 +458,7 @@ class VanillaDefaultImage(Adw.Bin):
                 "pretty_name": _imgref_to_pretty_name(url),
                 "flatpaks": _FALLBACK_FLATPAKS,
                 "carousel": None,
+                "needs_user_creation": False,
                 "icon": None,
             }
         return {
@@ -452,6 +466,7 @@ class VanillaDefaultImage(Adw.Bin):
             "pretty_name": self.__selected_pretty_name,
             "flatpaks": flatpaks,
             "carousel": self.__selected_carousel,
+            "needs_user_creation": self.__selected_needs_user_creation,
             "icon": self.__selected_icon,
         }
 
