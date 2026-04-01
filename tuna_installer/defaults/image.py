@@ -138,11 +138,16 @@ def _count_leaves(nodes: list) -> int:
 _LEAF_COUNT = _count_leaves(_IMAGE_TREE)
 
 
-def _fetch_brewfile_flatpaks(url: str) -> list[str] | None:
-    """Fetch a Brewfile from a URL and return the list of flatpak app IDs.
+def _fetch_remote_flatpak_list(url: str) -> list[str] | None:
+    """Fetch a remote flatpak list and return app IDs.
 
-    Parses lines of the form:  flatpak "com.example.App"
+    Handles two formats:
+    - Brewfile:  ``flatpak "com.example.App"`` lines
+    - Plain ref: ``app/com.example.App/x86_64/stable`` lines (one per line)
+    - Plain IDs: ``com.example.App`` lines (one per line, no slash)
+
     Returns None on network/parse error so the caller can fall back gracefully.
+    Only app entries are included; runtime entries are excluded.
     """
     try:
         with urllib.request.urlopen(url, timeout=10) as resp:
@@ -150,9 +155,22 @@ def _fetch_brewfile_flatpaks(url: str) -> list[str] | None:
         apps = []
         for line in text.splitlines():
             line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            # Brewfile format: flatpak "com.example.App"
             m = re.match(r'^flatpak\s+"([^"]+)"', line)
             if m:
                 apps.append(m.group(1))
+                continue
+            # Plain ref format: app/com.example.App/x86_64/stable
+            if line.startswith("app/"):
+                parts = line.split("/")
+                if len(parts) >= 2:
+                    apps.append(parts[1])
+                continue
+            # Plain app ID: com.example.App (must look like a reverse-DNS ID)
+            if re.match(r'^[a-zA-Z][a-zA-Z0-9_-]*(\.[a-zA-Z][a-zA-Z0-9_-]*){1,}$', line):
+                apps.append(line)
         logger.info(f"Fetched {len(apps)} flatpaks from {url}")
         return apps if apps else None
     except Exception as e:
@@ -327,9 +345,9 @@ class VanillaDefaultImage(Adw.Bin):
             self.__selected_imgref = imgref
             self.__selected_icon = icon
             self.__selected_pretty_name = _imgref_to_pretty_name(imgref)
-            # flatpaks may be a list of app IDs or a URL string pointing to a Brewfile.
+            # flatpaks may be a list of app IDs or a URL string pointing to a remote list.
             if isinstance(flatpaks, str) and flatpaks.startswith("http"):
-                self.__selected_flatpaks = _fetch_brewfile_flatpaks(flatpaks)
+                self.__selected_flatpaks = _fetch_remote_flatpak_list(flatpaks)
             else:
                 self.__selected_flatpaks = flatpaks
             logger.info(f"Image selected: {imgref} ({self.__selected_pretty_name})")
