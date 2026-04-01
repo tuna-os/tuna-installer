@@ -44,14 +44,34 @@ class Processor:
         logger.info(f"Building fisherman recipe from finals: {list(merged.keys())}")
 
         # --- Disk ---
-        # disk_info comes from VanillaDefaultDisk.get_finals() as:
-        #   {"auto": {"disk": "/dev/vda", "pretty_size": ..., ...}}
+        # disk_info comes from VanillaDefaultDisk.get_finals() as one of:
+        #   Auto:   {"auto": {"disk": "/dev/vda", ...}}
+        #   Manual: {"/dev/sda1": {"fs": "fat32", "mp": "/boot/efi"}, "/dev/sda2": {...}, ...}
         disk_info = merged.get("disk", {})
         disk_device = ""
         filesystem = "xfs"
         btrfs_subvolumes = False
+        custom_mounts = []
 
-        if isinstance(disk_info, dict):
+        is_manual = (
+            isinstance(disk_info, dict)
+            and disk_info
+            and all(k.startswith("/dev/") for k in disk_info)
+        )
+
+        if is_manual:
+            for partition, spec in disk_info.items():
+                fstype = spec.get("fs", "unformatted") or "unformatted"
+                mountpoint = spec.get("mp", "")
+                if not mountpoint:
+                    continue
+                custom_mounts.append({
+                    "partition": partition,
+                    "target": mountpoint,
+                    "fstype": fstype,
+                })
+            logger.info(f"Manual partition layout: {len(custom_mounts)} mounts")
+        elif isinstance(disk_info, dict):
             if "auto" in disk_info:
                 disk_device = disk_info["auto"].get("disk", "")
             elif "disk" in disk_info:
@@ -145,6 +165,8 @@ class Processor:
                 "groups": user_groups,
             },
         }
+        if custom_mounts:
+            recipe["customMounts"] = custom_mounts
 
         logger.info(f"Generated fisherman recipe: disk={disk_device}, image={image}, encryption={encryption_type}")
 
