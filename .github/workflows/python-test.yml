@@ -52,7 +52,9 @@ jobs:
             blueprint-compiler \
             meson \
             ninja-build \
-            libglib2.0-dev-bin \
+            libglib2.0-dev \
+            desktop-file-utils \
+            appstream \
             gettext \
             xvfb
 
