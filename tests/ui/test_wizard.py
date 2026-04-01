@@ -20,7 +20,7 @@ import pytest
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, GLib, Gio, Gtk  # noqa: E402
 
 repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -52,21 +52,23 @@ def _pump():
         ctx.iteration(False)
 
 
-def _make_app():
-    """Create a fresh Adw.Application for each test (non-unique ID avoids conflicts)."""
-    app = Adw.Application(application_id="org.tunaos.InstallerTest",
-                          flags=0)
-    return app
-
-
 @pytest.fixture()
 def window():
     """Yield an initialised VanillaWindow (wizard root) for the test.
 
-    VanillaWindow.__init__ passes all kwargs to GObject, which rejects
-    unknown properties.  The recipe is loaded by RecipeLoader from disk,
-    honoring the VANILLA_CUSTOM_RECIPE env var, so we write the test recipe
-    to a temp file and point that var at it.
+    GTK4 requires:
+    1. Adw.Application.do_startup() to be called (registers Adw widget types
+       via Adw.init()) — only happens when app.run() emits the startup signal.
+    2. Windows to be created after startup signal fires.
+
+    Strategy:
+    - Write the test recipe to a temp file (VANILLA_CUSTOM_RECIPE), so
+      RecipeLoader picks it up without a kwarg.
+    - Connect to the activate signal to create VanillaWindow.
+    - Remove the window from the app's window list before quitting so GTK
+      shutdown doesn't destroy it.
+    - Call app.quit() so app.run() returns, leaving the window alive.
+    - Yield the window to the test; destroy it in teardown.
     """
     from tuna_installer.windows.main_window import VanillaWindow
 
@@ -78,15 +80,38 @@ def window():
 
     old_recipe_env = os.environ.get("VANILLA_CUSTOM_RECIPE")
     os.environ["VANILLA_CUSTOM_RECIPE"] = recipe_path
-    try:
-        app = _make_app()
-        win = VanillaWindow(application=app)
+
+    wins = []
+
+    app = Adw.Application(
+        application_id="org.tunaos.InstallerTest",
+        flags=Gio.ApplicationFlags.NON_UNIQUE,
+    )
+
+    def on_activate(a):
+        win = VanillaWindow(application=a)
+        wins.append(win)
         win.present()
         _pump()
-        yield win
-        win.close()
+        # Detach from app so GTK shutdown doesn't destroy the window.
+        a.remove_window(win)
+        a.quit()
+
+    app.connect("activate", on_activate)
+    app.run([])  # blocks until quit() — startup fires Adw.init()
+
+    assert wins, "VanillaWindow was never created in activate handler"
+    win = wins[0]
+
+    try:
         _pump()
+        yield win
     finally:
+        try:
+            win.destroy()
+        except Exception:
+            pass
+        _pump()
         if old_recipe_env is None:
             os.environ.pop("VANILLA_CUSTOM_RECIPE", None)
         else:
