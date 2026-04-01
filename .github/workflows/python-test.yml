@@ -1,0 +1,75 @@
+name: Python Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ── Job 1: Pure-logic unit tests (no display, no GTK) ─────────────────────
+  unit:
+    name: Unit Tests (no display)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run unit tests
+        run: pytest tests/unit/ -v --tb=short
+
+  # ── Job 2: GTK integration tests (offscreen backend + compiled resources) ──
+  ui:
+    name: UI Integration Tests (offscreen GTK)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            python3-pytest \
+            python3-gi \
+            python3-gi-cairo \
+            gir1.2-gtk-4.0 \
+            gir1.2-adw-1 \
+            gir1.2-vte-3.91 \
+            blueprint-compiler \
+            meson \
+            ninja-build \
+            libglib2.0-dev-bin \
+            gettext \
+            xvfb
+
+      - name: Build GResources (blueprints → .gresource)
+        run: |
+          meson setup build \
+            -Dbuild-fisherman=false \
+            --prefix=/tmp/tuna-install
+          ninja -C build
+          RESOURCE=$(find build -name "tuna-installer.gresource" | head -1)
+          echo "TUNA_RESOURCE=${RESOURCE}" >> $GITHUB_ENV
+          echo "GResource built at: ${RESOURCE}"
+
+      - name: Run UI integration tests (offscreen)
+        env:
+          GDK_BACKEND: offscreen
+          GTK_A11Y: none
+        run: |
+          xvfb-run -a python3 -m pytest tests/ui/ -v --tb=short \
+            -p no:cacheprovider

@@ -227,10 +227,12 @@ class VanillaDefaultImage(Adw.Bin):
         self.__selected_flatpaks = None  # per-image flatpak list (None = use fallback)
         self.__selected_carousel = None  # per-image carousel slides (None = use recipe default)
         self.__selected_needs_user_creation = False
+        self.__selected_composefs_backend = False  # image requires composefs backend
+        self.__selected_image_type = "bootc"        # "bootc" or "ostree"
         self.__selected_icon = None      # icon spec for selected image (str or None)
         self.__selected_pretty_name = _imgref_to_pretty_name(_DEFAULT_IMAGE)
         self.__all_expanders = []   # every ExpanderRow widget
-        self.__leaf_rows = []       # [(row, check, imgref, flatpaks, icon, carousel, needs_user, search_str, [ancestor_exps])]
+        self.__leaf_rows = []       # [(row, check, imgref, flatpaks, icon, carousel, needs_user, composefs, image_type, search_str, [ancestor_exps])]
 
         # Hidden anchor for the radio CheckButton group.
         self.__radio_anchor = Gtk.CheckButton()
@@ -272,18 +274,21 @@ class VanillaDefaultImage(Adw.Bin):
                     img.get("description", ""), "", [exp])
             self.list_images.append(exp)
 
-    def __build_node(self, parent, node, ancestors, search_ctx, flatpaks_ctx=None, icon_ctx=None, carousel_ctx=None, needs_user_ctx=False):
+    def __build_node(self, parent, node, ancestors, search_ctx, flatpaks_ctx=None, icon_ctx=None, carousel_ctx=None, needs_user_ctx=False, composefs_ctx=False, image_type_ctx="bootc"):
         """Recursively build ExpanderRow groups and ActionRow leaves."""
-        # Inherit flatpaks, icon, carousel, and needs_user_creation from nearest ancestor.
+        # Inherit flatpaks, icon, carousel, needs_user_creation, composefs, and image_type from nearest ancestor.
         node_flatpaks = node.get("flatpaks", flatpaks_ctx)
         node_icon = node.get("icon", icon_ctx)
         node_carousel = node.get("carousel", carousel_ctx)
         node_needs_user = node.get("needs_user_creation", needs_user_ctx)
+        node_composefs = node.get("composefs", composefs_ctx)
+        node_image_type = node.get("image_type", image_type_ctx)
 
         if "imgref" in node:
             self.__add_leaf(parent, node["name"], node["imgref"],
                             node.get("desc", ""), search_ctx, ancestors,
-                            node_flatpaks, node_icon, node_carousel, node_needs_user)
+                            node_flatpaks, node_icon, node_carousel, node_needs_user,
+                            node_composefs, node_image_type)
             return
 
         exp = Adw.ExpanderRow(title=node["name"])
@@ -305,7 +310,7 @@ class VanillaDefaultImage(Adw.Bin):
         child_ancestors = ancestors + [exp]
 
         for child in node.get("children", []):
-            self.__build_node(exp, child, child_ancestors, child_ctx, node_flatpaks, node_icon, node_carousel, node_needs_user)
+            self.__build_node(exp, child, child_ancestors, child_ctx, node_flatpaks, node_icon, node_carousel, node_needs_user, node_composefs, node_image_type)
 
         if parent is self.list_images:
             parent.append(exp)
@@ -313,7 +318,8 @@ class VanillaDefaultImage(Adw.Bin):
             parent.add_row(exp)
 
     def __add_leaf(self, parent, name, imgref, desc, search_ctx, ancestors,
-                   flatpaks=None, icon=None, carousel=None, needs_user=False):
+                   flatpaks=None, icon=None, carousel=None, needs_user=False,
+                   composefs=False, image_type="bootc"):
         search_str = f"{search_ctx} {name} {desc} {imgref}".lower()
 
         row = Adw.ActionRow(title=name, subtitle=imgref)
@@ -325,7 +331,7 @@ class VanillaDefaultImage(Adw.Bin):
         check.set_group(self.__radio_anchor)
         row.add_prefix(check)
         row.set_activatable_widget(check)
-        check.connect("toggled", self.__on_check_toggled, imgref, flatpaks, icon, carousel, needs_user)
+        check.connect("toggled", self.__on_check_toggled, imgref, flatpaks, icon, carousel, needs_user, composefs, image_type)
 
         # Leaf icon — only for nodes that explicitly define one (e.g. TunaOS variants).
         if icon:
@@ -334,10 +340,10 @@ class VanillaDefaultImage(Adw.Bin):
                 row.add_suffix(img)
 
         parent.add_row(row)
-        self.__leaf_rows.append((row, check, imgref, flatpaks, icon, carousel, needs_user, search_str, list(ancestors)))
+        self.__leaf_rows.append((row, check, imgref, flatpaks, icon, carousel, needs_user, composefs, image_type, search_str, list(ancestors)))
 
     def __select_default(self):
-        for _row, check, imgref, _flatpaks, _icon, _carousel, _needs_user, _search, ancestors in self.__leaf_rows:
+        for _row, check, imgref, _flatpaks, _icon, _carousel, _needs_user, _composefs, _image_type, _search, ancestors in self.__leaf_rows:
             if imgref == _DEFAULT_IMAGE:
                 check.set_active(True)
                 for exp in ancestors:
@@ -348,12 +354,14 @@ class VanillaDefaultImage(Adw.Bin):
 
     # ── Selection handlers ────────────────────────────────────────────────────
 
-    def __on_check_toggled(self, check, imgref, flatpaks, icon, carousel, needs_user):
+    def __on_check_toggled(self, check, imgref, flatpaks, icon, carousel, needs_user, composefs, image_type):
         if check.get_active():
             self.__selected_imgref = imgref
             self.__selected_icon = icon
             self.__selected_carousel = carousel
             self.__selected_needs_user_creation = needs_user
+            self.__selected_composefs_backend = composefs
+            self.__selected_image_type = image_type
             self.__selected_pretty_name = _imgref_to_pretty_name(imgref)
             # flatpaks may be a list of app IDs or a URL string pointing to a remote list.
             if isinstance(flatpaks, str) and flatpaks.startswith("http"):
@@ -372,6 +380,8 @@ class VanillaDefaultImage(Adw.Bin):
             self.__selected_icon = None
             self.__selected_carousel = None
             self.__selected_needs_user_creation = False
+            self.__selected_composefs_backend = False
+            self.__selected_image_type = "bootc"
             self.__selected_pretty_name = None
         self.__update_btn_next()
 
@@ -393,14 +403,14 @@ class VanillaDefaultImage(Adw.Bin):
             for exp in self.__all_expanders:
                 exp.set_visible(True)
                 exp.set_expanded(False)
-            for row, _, _, _, _, _, _, _, _ in self.__leaf_rows:
+            for row, _, _, _, _, _, _, _, _, _, _ in self.__leaf_rows:
                 row.set_visible(True)
             self.__expand_default_path()
             return
 
         # Determine which leaves match and which expanders are needed.
         visible_expanders = set()
-        for row, _, _, _flatpaks, _icon, _carousel, _needs_user, search_str, ancestors in self.__leaf_rows:
+        for row, _, _, _flatpaks, _icon, _carousel, _needs_user, _composefs, _image_type, search_str, ancestors in self.__leaf_rows:
             if query in search_str:
                 row.set_visible(True)
                 for exp in ancestors:
@@ -459,6 +469,8 @@ class VanillaDefaultImage(Adw.Bin):
                 "flatpaks": _FALLBACK_FLATPAKS,
                 "carousel": None,
                 "needs_user_creation": False,
+                "composefs_backend": False,
+                "image_type": "bootc",
                 "icon": None,
             }
         return {
@@ -467,6 +479,8 @@ class VanillaDefaultImage(Adw.Bin):
             "flatpaks": flatpaks,
             "carousel": self.__selected_carousel,
             "needs_user_creation": self.__selected_needs_user_creation,
+            "composefs_backend": self.__selected_composefs_backend,
+            "image_type": self.__selected_image_type,
             "icon": self.__selected_icon,
         }
 

@@ -132,9 +132,11 @@ class Processor:
         # --- Flatpaks ---
         flatpaks = merged.get("flatpaks", [])
 
-        # --- SELinux / unified storage ---
+        # --- SELinux / unified storage / composefs / image type ---
         selinux_disabled = sys_recipe.get("selinuxDisabled", False)
         unified_storage = sys_recipe.get("unifiedStorage", False)
+        composefs_backend = bool(merged.get("composefs_backend", False))
+        image_type = merged.get("image_type", "bootc") or "bootc"
 
         # --- User account ---
         user_info = merged.get("user", {})
@@ -156,6 +158,7 @@ class Processor:
             "targetImgref": target_imgref,
             "selinuxDisabled": selinux_disabled,
             "unifiedStorage": unified_storage,
+            "composeFsBackend": composefs_backend,
             "hostname": hostname,
             "flatpaks": flatpaks,
             "user": {
@@ -167,6 +170,8 @@ class Processor:
         }
         if custom_mounts:
             recipe["customMounts"] = custom_mounts
+        if image_type and image_type != "bootc":
+            recipe["imageType"] = image_type
 
         logger.info(f"Generated fisherman recipe: disk={disk_device}, image={image}, encryption={encryption_type}")
 
