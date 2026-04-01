@@ -68,10 +68,10 @@ jobs:
           echo "TUNA_RESOURCE=${RESOURCE}" >> $GITHUB_ENV
           echo "GResource built at: ${RESOURCE}"
 
-      - name: Run UI integration tests (offscreen)
+      - name: Run UI integration tests (Xvfb)
         env:
-          GDK_BACKEND: offscreen
           GTK_A11Y: none
+          NO_AT_BRIDGE: "1"
         run: |
           xvfb-run -a python3 -m pytest tests/ui/ -v --tb=short \
             -p no:cacheprovider

@@ -1,16 +1,20 @@
 """conftest.py for GTK UI integration tests.
 
-Handles GResource loading and display/backend setup.
+Handles GResource loading and display setup.
 Must run before any GTK imports in tests.
+
+GTK4 has no offscreen backend (that was GTK3). Tests need a real X display,
+provided in CI by xvfb-run. Locally, run with:
+    xvfb-run -a pytest tests/ui/
+or ensure DISPLAY is set to a live X server.
 """
 
 import os
 import sys
 
-# Use offscreen GTK backend — no X11/Wayland display needed.
-# Must be set before gi/GTK is imported.
-os.environ.setdefault("GDK_BACKEND", "offscreen")
-os.environ.setdefault("GTK_A11Y", "none")  # skip AT-SPI setup
+# Suppress AT-SPI accessibility bus warnings in headless CI.
+os.environ.setdefault("NO_AT_BRIDGE", "1")
+os.environ.setdefault("GTK_A11Y", "none")
 
 # Add repo root to sys.path so tuna_installer is importable.
 repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -20,6 +24,7 @@ if repo_root not in sys.path:
 import gi  # noqa: E402
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
+gi.require_version("Vte", "3.91")
 
 from gi.repository import Gio  # noqa: E402
 
