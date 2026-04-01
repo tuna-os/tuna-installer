@@ -43,11 +43,12 @@ template $VanillaWindow: Adw.ApplicationWindow {
         [end]
         Button btn_next {
           visible: false;
-          icon-name: "go-next-symbolic";
+          label: _("Next");
           tooltip-text: _("Next");
 
           styles [
             "suggested-action",
+            "pill",
           ]
         }
       }

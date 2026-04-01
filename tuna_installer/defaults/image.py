@@ -426,7 +426,7 @@ class VanillaDefaultImage(Adw.Bin):
                 exp.set_visible(False)
 
     def __expand_default_path(self):
-        for _, _, imgref, _, _, _, _, _, ancestors in self.__leaf_rows:
+        for _, _, imgref, _, _, _, _, _, _, _, ancestors in self.__leaf_rows:
             if imgref == _DEFAULT_IMAGE:
                 for exp in ancestors:
                     exp.set_expanded(True)
