@@ -36,6 +36,101 @@ _FISHERMAN_CACHE_DIR = os.path.join(os.environ.get("HOME", "/tmp"), ".cache", "t
 _FISHERMAN_HOST_PATH = os.path.join(_FISHERMAN_CACHE_DIR, "fisherman")
 _FISHERMAN_LOG_PATH = os.path.join(_FISHERMAN_CACHE_DIR, "fisherman-output.log")
 
+from tuna_installer.utils.progress_parser import apply_progress_event, new_progress_state
+
+
+def _new_progress_state() -> dict:
+    """Return a fresh progress state dict (no GTK types)."""
+    return {
+        "pulse_active": True,
+        "current_step": 0,
+        "current_total": 0,
+        "current_step_name": "",
+        "current_weight_pct": 0,
+        "current_cumulative_pct": 0,
+        "seen_substeps": set(),
+        "boot_id": "",
+    }
+
+
+def apply_progress_event(line: str, state: dict) -> dict | None:
+    """Parse one fisherman log line and return a UI-update dict, or None.
+
+    Pure function — no GTK, no I/O.  The returned dict has:
+      "fraction"  — float 0-1 for progressbar.set_fraction()
+      "label"     — str for progressbar_text.set_label()
+      "pulse"     — bool; True means switch bar back to pulse mode
+      "complete"  — bool; True means install finished
+    ``state`` is mutated in-place to track multi-line context.
+    Returns None for non-JSON lines or events that require no UI change.
+    """
+    if not line.startswith("{"):
+        return None
+    try:
+        event = json.loads(line)
+    except (json.JSONDecodeError, ValueError):
+        return None
+
+    event_type = event.get("type", "")
+
+    if event_type == "step":
+        step = event.get("step", 0)
+        total = event.get("total_steps", 1)
+        name = event.get("step_name", "Installing")
+        if step <= state["current_step"] and state["current_step"] > 0:
+            return None
+        cumulative_pct = event.get("cumulative_pct", 0)
+        state["current_weight_pct"] = event.get("weight_pct", 0)
+        state["current_cumulative_pct"] = cumulative_pct
+        state["current_step"] = step
+        state["current_total"] = total
+        state["current_step_name"] = name
+        state["seen_substeps"].clear()
+        state["pulse_active"] = False
+        return {
+            "fraction": cumulative_pct / 100.0,
+            "label": "Step %d/%d: %s" % (step, total, name),
+            "pulse": False,
+            "complete": False,
+        }
+
+    if event_type == "substep":
+        msg = event.get("message", "")
+        if not msg:
+            return None
+        fraction = None
+        m = _RE_LAYER_PROGRESS.match(msg)
+        if m and state["current_weight_pct"] > 0:
+            done = int(m.group(1))
+            total_layers = int(m.group(2))
+            sub_frac = done / total_layers
+            fraction = min(
+                (state["current_cumulative_pct"] + sub_frac * state["current_weight_pct"]) / 100.0,
+                1.0,
+            )
+        if msg in state["seen_substeps"]:
+            # Still update fraction even for duplicate substep messages.
+            if fraction is not None:
+                return {"fraction": fraction, "label": None, "pulse": False, "complete": False}
+            return None
+        state["seen_substeps"].add(msg)
+        label = None
+        if state["current_step"]:
+            label = "Step %d/%d: %s — %s" % (
+                state["current_step"],
+                state["current_total"],
+                state["current_step_name"],
+                msg,
+            )
+        return {"fraction": fraction, "label": label, "pulse": False, "complete": False}
+
+    if event_type == "complete":
+        state["pulse_active"] = False
+        state["boot_id"] = event.get("boot_id", "")
+        return {"fraction": 1.0, "label": "Installation complete!", "pulse": False, "complete": True}
+
+    return None
+
 
 def _fisherman_argv(recipe: str) -> list:
     """Build the VTE argv that runs fisherman and tees combined output to a log file.
@@ -111,14 +206,10 @@ class VanillaProgress(Gtk.Box):
         self.__font.set_stretch(Pango.Stretch.NORMAL)
         self.style_manager = Adw.StyleManager().get_default()
         self.delta = False
-        self.__last_vte_lines = 0  # track how many lines we've already parsed
         self.__pulse_active = True  # whether the progress bar is in pulse mode
-        self.__current_step = 0
-        self.__current_total = 0
-        self.__current_step_name = ""
-        self.__current_weight_pct = 0
-        self.__current_cumulative_pct = 0
-        self.__seen_substeps = set()  # deduplicate substep messages
+        self.__log_file = None      # open handle to fisherman-output.log for tailing
+        self.__log_linebuf = ""     # incomplete line buffer for the log watcher
+        self.__progress_state = new_progress_state()
         self.__boot_id = ""  # EFI boot entry ID from fisherman complete event
 
         self.__build_ui()
@@ -272,7 +363,6 @@ class VanillaProgress(Gtk.Box):
         self.__terminal.set_scrollback_lines(50000)
         self.console_output.append(self.__terminal)
         self.__terminal.connect("child-exited", self.on_vte_child_exited)
-        self.__terminal.connect("contents-changed", self.__on_vte_contents_changed)
 
         for _, tour in self.__tour.items():
             self.carousel_tour.append(VanillaTour(self.__window, tour))
@@ -298,96 +388,73 @@ class VanillaProgress(Gtk.Box):
 
         RunAsync(run_async, None)
 
-    def __on_vte_contents_changed(self, terminal):
-        """Parse fisherman JSON progress lines from VTE terminal output."""
-        text = self.__get_vte_text()
-        if not text:
+    def _start_log_watcher(self):
+        """Begin tailing fisherman-output.log for JSON progress events.
+
+        Polls until the file exists (fisherman creates it at startup), then
+        registers a GLib.io_add_watch so the GTK main loop wakes only when
+        new bytes arrive — no VTE buffer scraping, no main-loop starvation.
+        """
+        GLib.timeout_add(200, self.__try_open_log_for_watching)
+
+    def __try_open_log_for_watching(self) -> bool:
+        if not os.path.exists(_FISHERMAN_LOG_PATH):
+            return True  # retry
+        try:
+            self.__log_file = open(_FISHERMAN_LOG_PATH, "r")
+            GLib.io_add_watch(
+                self.__log_file.fileno(),
+                GLib.IOCondition.IN | GLib.IOCondition.HUP,
+                self.__on_log_data,
+            )
+            logger.info("Log watcher started on %s", _FISHERMAN_LOG_PATH)
+            return False  # stop retrying
+        except OSError:
+            return True  # retry
+
+    def __on_log_data(self, fd, condition) -> bool:
+        """GLib.io_add_watch callback: read new lines from the log file."""
+        if condition & GLib.IOCondition.IN:
+            new_text = self.__log_file.read()
+            self.__log_linebuf += new_text
+            lines = self.__log_linebuf.split("\n")
+            self.__log_linebuf = lines[-1]  # preserve incomplete trailing line
+            for line in lines[:-1]:
+                self.__parse_progress_line(line.strip())
+
+        if condition & GLib.IOCondition.HUP:
+            # Drain any remaining buffered data after the process exits.
+            remaining = self.__log_file.read()
+            if remaining:
+                self.__log_linebuf += remaining
+            for line in self.__log_linebuf.split("\n"):
+                if line.strip():
+                    self.__parse_progress_line(line.strip())
+            self.__log_file.close()
+            self.__log_file = None
+            return False  # stop watching
+
+        return True  # keep watching
+
+    def __parse_progress_line(self, line: str):
+        """Parse a single fisherman log line and apply any resulting UI update."""
+        update = apply_progress_event(line, self.__progress_state)
+        if update is None:
             return
 
-        lines = text.strip().splitlines()
-        total_lines = len(lines)
+        if update["fraction"] is not None:
+            self.progressbar.set_fraction(update["fraction"])
+        if update["label"] is not None:
+            self.progressbar_text.set_label(_(update["label"]))
+        if not update["pulse"]:
+            self.__pulse_active = False
 
-        # Handle scrollback buffer overflow: if the buffer shrank (old lines
-        # were purged), reset our cursor to re-scan the available text.
-        if total_lines < self.__last_vte_lines:
-            self.__last_vte_lines = max(0, total_lines - 200)
-
-        if total_lines <= self.__last_vte_lines:
-            return
-
-        # Only process new lines
-        new_lines = lines[self.__last_vte_lines:]
-        self.__last_vte_lines = total_lines
-
-        for line in new_lines:
-            line = line.strip()
-            if not line.startswith("{"):
-                continue
-            try:
-                event = json.loads(line)
-            except (json.JSONDecodeError, ValueError):
-                continue
-
-            event_type = event.get("type", "")
-
-            if event_type == "step":
-                step = event.get("step", 0)
-                total = event.get("total_steps", 1)
-                name = event.get("step_name", "Installing")
-                # Only advance forward — ignore stale/duplicate steps.
-                if step <= self.__current_step and self.__current_step > 0:
-                    continue
-                cumulative_pct = event.get("cumulative_pct", 0)
-                self.__current_weight_pct = event.get("weight_pct", 0)
-                self.__current_cumulative_pct = cumulative_pct
-                fraction = cumulative_pct / 100.0
-                self.__current_step = step
-                self.__current_total = total
-                self.__current_step_name = name
-                self.__seen_substeps.clear()
-                # Stop pulsing and show real progress
-                self.__pulse_active = False
-                self.progressbar.set_fraction(fraction)
-                self.progressbar_text.set_label(
-                    _("Step %d/%d: %s") % (step, total, name)
-                )
-                logger.info(f"Progress: step {step}/{total} — {name}")
-
-            elif event_type == "substep":
-                msg = event.get("message", "")
-                if not msg:
-                    continue
-                # Interpolate bar within the current step's weight for layer progress.
-                m = _RE_LAYER_PROGRESS.match(msg)
-                if m and self.__current_weight_pct > 0:
-                    done = int(m.group(1))
-                    total_layers = int(m.group(2))
-                    sub_frac = done / total_layers
-                    bar_frac = (self.__current_cumulative_pct + sub_frac * self.__current_weight_pct) / 100.0
-                    self.progressbar.set_fraction(min(bar_frac, 1.0))
-                if msg not in self.__seen_substeps:
-                    self.__seen_substeps.add(msg)
-                    if self.__current_step:
-                        self.progressbar_text.set_label(
-                            _("Step %d/%d: %s — %s") % (
-                                self.__current_step,
-                                self.__current_total,
-                                self.__current_step_name,
-                                msg,
-                            )
-                        )
-                    logger.info(f"Substep: {msg}")
-
-            elif event_type == "info":
-                msg = event.get("message", "")
-                logger.info(f"Fisherman: {msg}")
-
-            elif event_type == "complete":
-                self.__pulse_active = False
-                self.progressbar.set_fraction(1.0)
-                self.progressbar_text.set_label(_("Installation complete!"))
-                self.__boot_id = event.get("boot_id", "")
-                logger.info("Fisherman reported completion")
+        if update["complete"]:
+            self.__boot_id = self.__progress_state["boot_id"]
+            logger.info("Fisherman reported completion")
+        elif update.get("label"):
+            logger.info("UI update: %s (fraction=%.2f)", update["label"],
+                        update["fraction"] if update["fraction"] is not None else -1)
 
     def on_vte_child_exited(self, terminal, status, *args):
         terminal.get_parent().remove(terminal)
@@ -429,6 +496,7 @@ class VanillaProgress(Gtk.Box):
             None,
             None,
         )
+        self._start_log_watcher()
 
     def update_carousel(self, slides: list):
         """Replace the carousel content with image-specific slides.
