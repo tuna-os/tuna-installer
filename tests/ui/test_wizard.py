@@ -56,19 +56,15 @@ def _pump():
 def window():
     """Yield an initialised VanillaWindow (wizard root) for the test.
 
-    GTK4 requires:
-    1. Adw.Application.do_startup() to be called (registers Adw widget types
-       via Adw.init()) — only happens when app.run() emits the startup signal.
-    2. Windows to be created after startup signal fires.
+    Adw.init() is called in pytest_configure (conftest) so all Adw widget
+    types are registered before we try to build templates.
 
-    Strategy:
-    - Write the test recipe to a temp file (VANILLA_CUSTOM_RECIPE), so
-      RecipeLoader picks it up without a kwarg.
-    - Connect to the activate signal to create VanillaWindow.
-    - Remove the window from the app's window list before quitting so GTK
-      shutdown doesn't destroy it.
-    - Call app.quit() so app.run() returns, leaving the window alive.
-    - Yield the window to the test; destroy it in teardown.
+    VanillaWindow.__init__ passes kwargs to GObject (which rejects unknown
+    properties), so we inject the test recipe via VANILLA_CUSTOM_RECIPE
+    rather than as a constructor kwarg.
+
+    GTK-CRITICAL "windows must be added after startup" is a soft warning;
+    the window is still fully functional for tests.
     """
     from tuna_installer.windows.main_window import VanillaWindow
 
@@ -80,30 +76,13 @@ def window():
 
     old_recipe_env = os.environ.get("VANILLA_CUSTOM_RECIPE")
     os.environ["VANILLA_CUSTOM_RECIPE"] = recipe_path
-
-    wins = []
-
-    app = Adw.Application(
-        application_id="org.tunaos.InstallerTest",
-        flags=Gio.ApplicationFlags.NON_UNIQUE,
-    )
-
-    def on_activate(a):
-        win = VanillaWindow(application=a)
-        wins.append(win)
-        win.present()
-        _pump()
-        # Detach from app so GTK shutdown doesn't destroy the window.
-        a.remove_window(win)
-        a.quit()
-
-    app.connect("activate", on_activate)
-    app.run([])  # blocks until quit() — startup fires Adw.init()
-
-    assert wins, "VanillaWindow was never created in activate handler"
-    win = wins[0]
-
     try:
+        app = Adw.Application(
+            application_id="org.tunaos.InstallerTest",
+            flags=Gio.ApplicationFlags.NON_UNIQUE,
+        )
+        win = VanillaWindow(application=app)
+        win.present()
         _pump()
         yield win
     finally:

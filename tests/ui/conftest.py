@@ -26,7 +26,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("Vte", "3.91")
 
-from gi.repository import Gio  # noqa: E402
+from gi.repository import Adw, Gio  # noqa: E402
 
 import pytest  # noqa: E402
 
@@ -51,7 +51,13 @@ def _find_gresource() -> str | None:
 
 
 def pytest_configure(config):
-    """Load GResource bundle at session start so all widgets can be instantiated."""
+    """Load GResource bundle and initialise Adwaita at session start.
+
+    Adw.init() must be called before instantiating any Adw widget type
+    (AdwToolbarView, AdwStatusPage, etc.).  In a normal app this is done
+    by Adw.Application.do_startup(); for tests we call it directly so that
+    widget templates can be built without running a GLib main loop.
+    """
     path = _find_gresource()
     if path:
         res = Gio.Resource.load(path)
@@ -60,3 +66,7 @@ def pytest_configure(config):
     else:
         print("\n[conftest] WARNING: tuna-installer.gresource not found — "
               "set TUNA_RESOURCE=<path> or run 'meson setup build && ninja -C build' first.")
+
+    # Register all Adw widget types so @Gtk.Template classes that reference
+    # AdwToolbarView, AdwStatusPage, etc. can be instantiated in tests.
+    Adw.init()
