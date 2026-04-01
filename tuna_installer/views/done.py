@@ -36,14 +36,16 @@ class VanillaDone(Adw.Bin):
         super().__init__(**kwargs)
         self.__window = window
         self.__log = None
+        self.__boot_id = ""
         self.delta = False
 
         self.btn_reboot.connect("clicked", self.__on_reboot_clicked)
         self.btn_close.connect("clicked", self.__on_close_clicked)
         self.btn_log.connect("clicked", self.__on_log_clicked)
 
-    def set_result(self, result, terminal):
+    def set_result(self, result, terminal, boot_id=""):
         self.__terminal = terminal
+        self.__boot_id = boot_id
 
         if result:
             pretty_name = getattr(self.__window, "pretty_name", None) \
@@ -62,6 +64,24 @@ class VanillaDone(Adw.Bin):
 
     def __on_reboot_clicked(self, button):
         in_flatpak = os.path.exists("/.flatpak-info")
+        if self.__boot_id:
+            # Set BootNext so the firmware boots the newly installed drive on
+            # the next boot, even if the install media is still plugged in.
+            try:
+                if in_flatpak:
+                    subprocess.run(
+                        ["flatpak-spawn", "--host", "efibootmgr", "--bootnext", self.__boot_id],
+                        check=True,
+                    )
+                else:
+                    subprocess.run(["efibootmgr", "--bootnext", self.__boot_id], check=True)
+            except Exception as e:
+                # Non-fatal — the user can always pick the right entry in the
+                # BIOS/UEFI boot menu if this fails.
+                import logging
+                logging.getLogger("Installer::Done").warning(
+                    "Could not set BootNext to %s: %s", self.__boot_id, e
+                )
         if in_flatpak:
             subprocess.run(["flatpak-spawn", "--host", "systemctl", "reboot"])
         else:

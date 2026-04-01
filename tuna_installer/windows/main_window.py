@@ -292,10 +292,10 @@ class VanillaWindow(Adw.ApplicationWindow):
         toast.props.timeout = timeout
         self.toasts.add_toast(toast)
 
-    def set_installation_result(self, result, terminal):
+    def set_installation_result(self, result, terminal, boot_id=""):
         if result:
             logger.info("Installation complete!")
         else:
             logger.error("Installation failed!")
-        self.__view_done.set_result(result, terminal)
+        self.__view_done.set_result(result, terminal, boot_id)
         self.next()

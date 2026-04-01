@@ -119,6 +119,7 @@ class VanillaProgress(Gtk.Box):
         self.__current_weight_pct = 0
         self.__current_cumulative_pct = 0
         self.__seen_substeps = set()  # deduplicate substep messages
+        self.__boot_id = ""  # EFI boot entry ID from fisherman complete event
 
         self.__build_ui()
         self.__on_setup_terminal_colors()
@@ -385,6 +386,7 @@ class VanillaProgress(Gtk.Box):
                 self.__pulse_active = False
                 self.progressbar.set_fraction(1.0)
                 self.progressbar_text.set_label(_("Installation complete!"))
+                self.__boot_id = event.get("boot_id", "")
                 logger.info("Fisherman reported completion")
 
     def on_vte_child_exited(self, terminal, status, *args):
@@ -403,7 +405,7 @@ class VanillaProgress(Gtk.Box):
 
         # exit status 0 = success, anything else = failure.
         success = not bool(status)
-        self.__window.set_installation_result(success, self.__terminal)
+        self.__window.set_installation_result(success, self.__terminal, self.__boot_id)
 
     def start(self, recipe):
         # If VANILLA_FAKE was passed as argument
