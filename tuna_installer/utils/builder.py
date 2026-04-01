@@ -24,6 +24,7 @@ from tuna_installer.defaults.conn_check import VanillaDefaultConnCheck
 from tuna_installer.defaults.disk import VanillaDefaultDisk
 from tuna_installer.defaults.encryption import VanillaDefaultEncryption
 from tuna_installer.defaults.image import VanillaDefaultImage
+from tuna_installer.defaults.user import VanillaDefaultUsers
 from tuna_installer.defaults.welcome import VanillaDefaultWelcome
 from tuna_installer.layouts.yes_no import VanillaLayoutYesNo
 from tuna_installer.utils.recipe import RecipeLoader
@@ -37,6 +38,7 @@ templates = {
     "disk": VanillaDefaultDisk,
     "encryption": VanillaDefaultEncryption,
     "image": VanillaDefaultImage,
+    "user": VanillaDefaultUsers,
     "yes-no": VanillaLayoutYesNo,
 }
 

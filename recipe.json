@@ -28,6 +28,9 @@
         },
         "encryption": {
             "template": "encryption"
+        },
+        "user": {
+            "template": "user"
         }
     }
 }

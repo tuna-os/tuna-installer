@@ -116,6 +116,13 @@ class Processor:
         selinux_disabled = sys_recipe.get("selinuxDisabled", False)
         unified_storage = sys_recipe.get("unifiedStorage", False)
 
+        # --- User account ---
+        user_info = merged.get("user", {})
+        user_username = user_info.get("username", "")
+        user_fullname = user_info.get("fullname", "")
+        user_password = user_info.get("password", "")
+        user_groups   = user_info.get("groups", [])
+
         # Build the fisherman recipe
         recipe = {
             "disk": disk_device,
@@ -131,6 +138,12 @@ class Processor:
             "unifiedStorage": unified_storage,
             "hostname": hostname,
             "flatpaks": flatpaks,
+            "user": {
+                "username": user_username,
+                "fullname": user_fullname,
+                "password": user_password,
+                "groups": user_groups,
+            },
         }
 
         logger.info(f"Generated fisherman recipe: disk={disk_device}, image={image}, encryption={encryption_type}")
