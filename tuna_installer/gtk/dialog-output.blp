@@ -4,29 +4,35 @@ using Adw 1;
 template $VanillaDialogOutput: Adw.Window {
   title: _("Log");
   modal: true;
-  default-width: 500;
+  default-width: 700;
   default-height: 500;
 
   Adw.Bin {
     child: Adw.ToolbarView {
       [top]
-      Adw.HeaderBar {}
+      Adw.HeaderBar {
+        [end]
+        Button btn_copy {
+          icon-name: "edit-copy-symbolic";
+          tooltip-text: _("Copy All");
 
-      content: Adw.Bin {
-        margin-top: 6;
-        margin-bottom: 12;
-        margin-start: 12;
-        margin-end: 12;
+          styles [
+            "flat",
+          ]
+        }
+      }
 
-        styles [
-          "card",
-        ]
+      content: ScrolledWindow {
+        vexpand: true;
 
-        Box main_box {
-          margin-top: 6;
-          margin-bottom: 6;
-          margin-start: 6;
-          margin-end: 6;
+        TextView log_view {
+          editable: false;
+          monospace: true;
+          cursor-visible: false;
+          left-margin: 12;
+          right-margin: 12;
+          top-margin: 12;
+          bottom-margin: 12;
         }
       };
     };

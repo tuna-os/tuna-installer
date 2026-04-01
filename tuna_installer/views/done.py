@@ -91,6 +91,5 @@ class VanillaDone(Adw.Bin):
         self.__window.close()
 
     def __on_log_clicked(self, button):
-        if self.__terminal:
-            dialog = VanillaDialogOutput(self.__window, self.__terminal)
-            dialog.present()
+        dialog = VanillaDialogOutput(self.__window)
+        dialog.present()

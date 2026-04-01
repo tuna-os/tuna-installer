@@ -1,32 +1,40 @@
-# dialog.py
-#
-# Copyright 2024 mirkobrombin
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundationat version 3 of the License.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+import os
 from gettext import gettext as _
 
-from gi.repository import Adw, GObject, Gtk
+from gi.repository import Adw, Gtk
+
+
+_LOG_PATH = os.path.join(
+    os.environ.get("HOME", "/tmp"), ".cache", "tuna-installer", "fisherman-output.log"
+)
 
 
 @Gtk.Template(resource_path="/org/tunaos/Installer/gtk/dialog-output.ui")
 class VanillaDialogOutput(Adw.Window):
     __gtype_name__ = "VanillaDialogOutput"
 
-    main_box = Gtk.Template.Child()
+    log_view = Gtk.Template.Child()
+    btn_copy = Gtk.Template.Child()
 
-    def __init__(self, window, terminal, **kwargs):
+    def __init__(self, window, **kwargs):
         super().__init__(**kwargs)
         self.set_transient_for(window)
 
-        self.main_box.append(terminal)
+        if os.path.exists(_LOG_PATH):
+            with open(_LOG_PATH) as f:
+                content = f.read()
+        else:
+            content = _("Log not available.")
+
+        buf = self.log_view.get_buffer()
+        buf.set_text(content)
+        # Scroll to end so the last (most relevant) output is visible
+        self.log_view.scroll_mark_onscreen(buf.get_insert())
+
+        self.btn_copy.connect("clicked", self.__on_copy)
+
+    def __on_copy(self, button):
+        buf = self.log_view.get_buffer()
+        start, end = buf.get_bounds()
+        self.get_clipboard().set(buf.get_text(start, end, False))
+        self.btn_copy.set_icon_name("emblem-ok-symbolic")
