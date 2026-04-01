@@ -703,21 +703,32 @@ class VanillaDefaultDisk(Adw.Bin):
             self.group_disks.add(entry)
             self.__registry_disks.append(entry)
 
+        # If no fixed disks found, immediately populate removable disks too
+        if not self.__registry_disks:
+            for disk in self.__disks.all_disks(include_removable=True):
+                if disk.is_removable:
+                    entry = VanillaDefaultDiskEntry(self, disk)
+                    self.group_disks.add(entry)
+                    self.__registry_disks.append(entry)
+
         # Virtual disk row — always present
         self.__virtual_row = self.__build_virtual_disk_row()
         self.group_disks.add(self.__virtual_row)
 
-        all_disks_button = Adw.ButtonRow()
-        all_disks_button.set_title(_("Show removable disks"))
-        self.group_disks.add(all_disks_button)
+        self.__all_disks_button = Adw.ButtonRow()
+        self.__all_disks_button.set_title(_("Show removable disks"))
+        self.group_disks.add(self.__all_disks_button)
+        # Hide the button if removable disks are already shown
+        if not self.__disks.all_disks(include_removable=False):
+            self.__all_disks_button.set_visible(False)
 
-        all_disks_button.connect("activated", self.__on_btn_all_disks)
+        self.__all_disks_button.connect("activated", self.__on_btn_all_disks)
         self.btn_next.connect("clicked", self.__on_btn_next_clicked)
         self.btn_auto.connect("clicked", self.__on_auto_clicked)
         self.btn_manual.connect("clicked", self.__on_manual_clicked)
         self.btn_exit.connect("clicked", self.__on_btn_exit_clicked)
 
-        # Auto-select virtual disk if no physical disks are available
+        # Auto-select virtual disk if still no physical disks are available
         if not self.__registry_disks:
             self.__select_virtual_disk()
 
@@ -818,7 +829,7 @@ class VanillaDefaultDisk(Adw.Bin):
         return result
 
     def __on_btn_all_disks(self, widget):
-        widget.set_visible(False)
+        self.__all_disks_button.set_visible(False)
         for disk in self.__disks.all_disks(include_removable=True):
             if disk.is_removable:
                 entry = VanillaDefaultDiskEntry(self, disk)
