@@ -246,6 +246,14 @@ class VanillaWindow(Adw.ApplicationWindow):
             self.finals,
             self.recipe,
         )
+        # Update the progress carousel with the image-specific slides if provided.
+        carousel = None
+        for f in self.finals:
+            if isinstance(f, dict) and f.get("carousel"):
+                carousel = f["carousel"]
+                break
+        if carousel:
+            self.__view_progress.update_carousel(carousel)
         self.next()
         self.__view_progress.start(recipe)
 

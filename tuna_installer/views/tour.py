@@ -18,6 +18,7 @@
 
 from gettext import gettext as _
 
+import os
 from gi.repository import Adw, Gtk
 
 
@@ -35,6 +36,19 @@ class VanillaTour(Adw.Bin):
         self.__build_ui()
 
     def __build_ui(self):
-        self.assets_svg.set_resource(self.__tour["resource"])
-        self.status_page.set_title(self.__tour["title"])
-        self.status_page.set_description(self.__tour["description"])
+        self.status_page.set_title(self.__tour.get("title", ""))
+        self.status_page.set_description(self.__tour.get("description", ""))
+
+        # Support both the recipe.json format ("resource": "/org/...") and the
+        # images.json carousel format ("image": "resource:///org/..." or "/path/file").
+        asset = self.__tour.get("resource") or self.__tour.get("image", "")
+        if asset.startswith("resource:///"):
+            # Strip the URI prefix; Gtk.Picture.set_resource expects "/org/..." style.
+            self.assets_svg.set_resource(asset[len("resource://"):])
+        elif asset.startswith("resource://"):
+            self.assets_svg.set_resource(asset[len("resource://"):])
+        elif asset.startswith("/") and os.path.exists(asset):
+            self.assets_svg.set_filename(asset)
+        elif asset:
+            # Plain GResource path ("/org/tunaos/...") — used by recipe.json tour.
+            self.assets_svg.set_resource(asset)

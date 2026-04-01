@@ -429,3 +429,26 @@ class VanillaProgress(Gtk.Box):
             None,
             None,
         )
+
+    def update_carousel(self, slides: list):
+        """Replace the carousel content with image-specific slides.
+
+        Each slide is a dict with keys: title, description, and one of
+        'image' (images.json format) or 'resource' (recipe.json format).
+        Call this before start() so the carousel reflects the chosen image.
+        """
+        if not slides:
+            return
+
+        # Remove all existing pages.
+        while self.carousel_tour.get_n_pages() > 0:
+            page = self.carousel_tour.get_nth_page(0)
+            self.carousel_tour.remove(page)
+
+        for slide in slides:
+            self.carousel_tour.append(VanillaTour(self.__window, slide))
+
+        # Scroll back to first page.
+        if self.carousel_tour.get_n_pages() > 0:
+            self.carousel_tour.scroll_to(self.carousel_tour.get_nth_page(0), False)
+        self.__on_page_changed()
