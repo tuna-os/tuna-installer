@@ -1,24 +1,21 @@
 """GTK integration tests for the installer wizard.
 
-These tests instantiate real GTK widgets using the offscreen backend and
-compiled GResources (built by 'meson setup build && ninja -C build').
+These tests instantiate real GTK widgets via Xvfb and compiled GResources
+(built by 'meson setup build && ninja -C build').
 
 They drive the installer step by step, exactly as a user would, and assert
 that the right recipe JSON is produced at the end.
 
 Run with:
-    GDK_BACKEND=offscreen pytest tests/ui/ -v
-Or via CI (which pre-builds resources):
     xvfb-run pytest tests/ui/ -v
 """
 
 import json
 import os
 import sys
+import tempfile
 
 import pytest
-
-# conftest.py has already set GDK_BACKEND=offscreen and loaded GResource.
 
 import gi
 gi.require_version("Gtk", "4.0")
@@ -64,15 +61,37 @@ def _make_app():
 
 @pytest.fixture()
 def window():
-    """Yield an initialised VanillaWindow (wizard root) for the test."""
+    """Yield an initialised VanillaWindow (wizard root) for the test.
+
+    VanillaWindow.__init__ passes all kwargs to GObject, which rejects
+    unknown properties.  The recipe is loaded by RecipeLoader from disk,
+    honoring the VANILLA_CUSTOM_RECIPE env var, so we write the test recipe
+    to a temp file and point that var at it.
+    """
     from tuna_installer.windows.main_window import VanillaWindow
-    app = _make_app()
-    win = VanillaWindow(application=app, recipe=_SYS_RECIPE)
-    win.present()
-    _pump()
-    yield win
-    win.close()
-    _pump()
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False
+    ) as tf:
+        json.dump(_SYS_RECIPE, tf)
+        recipe_path = tf.name
+
+    old_recipe_env = os.environ.get("VANILLA_CUSTOM_RECIPE")
+    os.environ["VANILLA_CUSTOM_RECIPE"] = recipe_path
+    try:
+        app = _make_app()
+        win = VanillaWindow(application=app)
+        win.present()
+        _pump()
+        yield win
+        win.close()
+        _pump()
+    finally:
+        if old_recipe_env is None:
+            os.environ.pop("VANILLA_CUSTOM_RECIPE", None)
+        else:
+            os.environ["VANILLA_CUSTOM_RECIPE"] = old_recipe_env
+        os.unlink(recipe_path)
 
 
 # ── Smoke tests ────────────────────────────────────────────────────────────────
