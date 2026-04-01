@@ -38,9 +38,6 @@ _SYS_RECIPE = {
     "steps": {
         "welcome": {"template": "welcome", "protected": True},
         "image":   {"template": "image",   "protected": True},
-        "disk":    {"template": "disk"},
-        "encryption": {"template": "encryption"},
-        "user":    {"template": "user"},
     },
 }
 
