@@ -76,10 +76,10 @@ class TestApplyIcon(unittest.TestCase):
         status_page.set_paintable.assert_called_once_with(mock_texture)
 
     def test_icon_theme_name_calls_set_icon_name(self):
-        status_page = MagicMock()
-        apply_icon(status_page, "software-installed-symbolic")
-        status_page.set_icon_name.assert_called_once_with("software-installed-symbolic")
-        status_page.set_paintable.assert_not_called()
+        page_header = MagicMock()
+        apply_icon(page_header, "software-installed-symbolic")
+        assert page_header.icon_name == "software-installed-symbolic"
+        page_header.set_paintable.assert_not_called()
 
     def test_apply_icon_silently_ignores_errors(self):
         status_page = MagicMock()

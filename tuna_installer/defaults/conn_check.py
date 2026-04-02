@@ -33,7 +33,7 @@ class VanillaDefaultConnCheck(Adw.Bin):
     __gtype_name__ = "VanillaDefaultConnCheck"
 
     btn_recheck = Gtk.Template.Child()
-    status_page = Gtk.Template.Child()
+    page_header = Gtk.Template.Child()
 
     def __init__(self, window, distro_info, key, step, **kwargs):
         super().__init__(**kwargs)
@@ -93,9 +93,9 @@ class VanillaDefaultConnCheck(Adw.Bin):
                 self.__window.next()
                 return
 
-            self.status_page.set_icon_name("network-wired-disconnected-symbolic")
-            self.status_page.set_title(_("No Internet Connection!"))
-            self.status_page.set_description(
+            self.page_header.icon_name = "network-wired-disconnected-symbolic"
+            self.page_header.title = _("No Internet Connection!")
+            self.page_header.subtitle = (
                 _("Installer requires an active internet connection")
             )
             self.btn_recheck.set_visible(True)
@@ -104,9 +104,9 @@ class VanillaDefaultConnCheck(Adw.Bin):
 
     def __on_btn_recheck_clicked(self, widget, *args):
         widget.set_visible(False)
-        self.status_page.set_icon_name("content-loading-symbolic")
-        self.status_page.set_title(_("Checking Connection"))
-        self.status_page.set_description(
+        self.page_header.icon_name = "content-loading-symbolic"
+        self.page_header.title = _("Checking Connection")
+        self.page_header.subtitle = (
             _("Please wait until the connection check is done")
         )
         self.__conn_check()

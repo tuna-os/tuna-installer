@@ -25,7 +25,7 @@ from tuna_installer.windows.dialog import VanillaDialog
 class VanillaLayoutPreferences(Adw.Bin):
     __gtype_name__ = "VanillaLayoutPreferences"
 
-    status_page = Gtk.Template.Child()
+    page_header = Gtk.Template.Child()
     prefs_list = Gtk.Template.Child()
     btn_next = Gtk.Template.Child()
 
@@ -42,9 +42,9 @@ class VanillaLayoutPreferences(Adw.Bin):
         self.btn_next.connect("clicked", self.__next_step)
 
     def __build_ui(self):
-        self.status_page.set_icon_name(self.__step["icon"])
-        self.status_page.set_title(self.__step["title"])
-        self.status_page.set_description(self.__step["description"])
+        self.page_header.icon_name = self.__step["icon"]
+        self.page_header.title = self.__step["title"]
+        self.page_header.subtitle = self.__step["description"]
 
         for item in self.__step["preferences"]:
             _action_row = Adw.ActionRow(

@@ -23,7 +23,7 @@ class VanillaDefaultEncryption(Adw.Bin):
     __gtype_name__ = "VanillaDefaultEncryption"
 
     btn_next = Gtk.Template.Child()
-    status_page = Gtk.Template.Child()
+    page_header = Gtk.Template.Child()
 
     use_encryption_switch = Gtk.Template.Child()
     tpm2_switch = Gtk.Template.Child()
@@ -75,9 +75,9 @@ class VanillaDefaultEncryption(Adw.Bin):
 
     def __on_encryption_switch_set(self, state, user_data):
         if self.use_encryption_switch.get_active():
-            self.status_page.set_icon_name("changes-prevent-symbolic")
+            self.page_header.icon_name = "changes-prevent-symbolic"
         else:
-            self.status_page.set_icon_name("changes-allow-symbolic")
+            self.page_header.icon_name = "changes-allow-symbolic"
             self.tpm2_switch.set_active(False)
 
         self.__update_btn_next()

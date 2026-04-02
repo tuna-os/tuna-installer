@@ -6,13 +6,23 @@ template $VanillaTour: Adw.Bin {
   valign: fill;
   hexpand: true;
 
-  Adw.StatusPage status_page {
-    halign: fill;
-    valign: fill;
+  ScrolledWindow {
+    hscrollbar-policy: never;
+    vexpand: true;
     hexpand: true;
 
-    Picture assets_svg {
-      can-shrink: false;
+    Adw.PreferencesPage {
+      Adw.PreferencesGroup {
+        $TunaPageHeader page_header {
+          margin-top: 24;
+        }
+      }
+
+      Adw.PreferencesGroup {
+        Picture assets_svg {
+          can-shrink: false;
+        }
+      }
     }
   }
 }

@@ -7,7 +7,8 @@ template $VanillaDefaultEncryption: Adw.Bin {
   hexpand: true;
 
   Overlay {
-    valign: center;
+    vexpand: true;
+    hexpand: true;
 
     [overlay]
     Button btn_next {
@@ -25,12 +26,21 @@ template $VanillaDefaultEncryption: Adw.Bin {
       ]
     }
 
-    Adw.StatusPage status_page {
-      icon-name: "channel-secure-symbolic";
-      title: _("Device Encryption");
-      description: _("Encrypting your disk protects your personal information");
+    ScrolledWindow {
+      hscrollbar-policy: never;
+      vexpand: true;
+      hexpand: true;
 
       Adw.PreferencesPage {
+        Adw.PreferencesGroup {
+          $TunaPageHeader page_header {
+            margin-top: 24;
+            icon-name: "channel-secure-symbolic";
+            title: _("Device Encryption");
+            subtitle: _("Encrypting your disk protects your personal information");
+          }
+        }
+
         Adw.PreferencesGroup {
           Adw.ActionRow {
             title: _("Encrypt Device");

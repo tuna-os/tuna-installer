@@ -6,8 +6,18 @@ template $VanillaDefaultWelcome: Adw.Bin {
   valign: fill;
   hexpand: true;
 
-  Adw.StatusPage status_page {
+  ScrolledWindow {
+    hscrollbar-policy: never;
+    vexpand: true;
+    hexpand: true;
+
     Adw.PreferencesPage {
+      Adw.PreferencesGroup {
+        $TunaPageHeader page_header {
+          margin-top: 24;
+        }
+      }
+
       Adw.PreferencesGroup {
         Adw.ActionRow row_install {
           title: _("Install");

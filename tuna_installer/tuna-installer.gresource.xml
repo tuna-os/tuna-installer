@@ -28,6 +28,7 @@
     <file>gtk/default-image.ui</file>
     <file>gtk/default-nvidia.ui</file>
     <file>gtk/default-vm.ui</file>
+    <file>gtk/widget-page-header.ui</file>
     <file>gtk/widget-choice.ui</file>
     <file>gtk/widget-choice-expander.ui</file>
     <file>gtk/widget-disk.ui</file>

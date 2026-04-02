@@ -6,30 +6,31 @@ template $VanillaLayoutPreferences: Adw.Bin {
   valign: fill;
   hexpand: true;
 
-  Adw.StatusPage status_page {
-    halign: fill;
-    valign: fill;
+  ScrolledWindow {
+    hscrollbar-policy: never;
+    vexpand: true;
     hexpand: true;
 
-    Box {
-      orientation: vertical;
-      vexpand: true;
-      hexpand: true;
-      valign: center;
-
-      Adw.PreferencesPage {
-        Adw.PreferencesGroup prefs_list {}
+    Adw.PreferencesPage {
+      Adw.PreferencesGroup {
+        $TunaPageHeader page_header {
+          margin-top: 24;
+        }
       }
 
-      Button btn_next {
-        visible: false;
-        label: _("Next");
-        halign: center;
+      Adw.PreferencesGroup prefs_list {}
 
-        styles [
-          "pill",
-          "suggested-action",
-        ]
+      Adw.PreferencesGroup {
+        Button btn_next {
+          visible: false;
+          label: _("Next");
+          halign: center;
+
+          styles [
+            "pill",
+            "suggested-action",
+          ]
+        }
       }
     }
   }

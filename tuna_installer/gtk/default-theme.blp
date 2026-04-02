@@ -36,22 +36,23 @@ template $VanillaDefaultTheme: Box {
     }
   }
 
-  Adw.StatusPage {
+  $TunaPageHeader {
+    margin-top: 24;
     title: _("Color Scheme");
-    description: _("Choose a color scheme for your system");
+    subtitle: _("Choose a color scheme for your system");
     halign: fill;
-    valign: fill;
     hexpand: true;
+  }
 
-    Button btn_next {
-      visible: false;
-      label: _("Next");
-      halign: center;
+  Button btn_next {
+    visible: false;
+    label: _("Next");
+    halign: center;
+    margin-top: 18;
 
-      styles [
-        "pill",
-        "suggested-action",
-      ]
-    }
+    styles [
+      "pill",
+      "suggested-action",
+    ]
   }
 }

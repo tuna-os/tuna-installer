@@ -1,0 +1,36 @@
+using Gtk 4.0;
+
+template $TunaPageHeader: Gtk.Box {
+  orientation: vertical;
+  spacing: 18;
+  halign: center;
+
+  Image _icon {
+    pixel-size: 96;
+
+    styles [
+      "dim-label",
+    ]
+  }
+
+  Box {
+    orientation: vertical;
+    spacing: 6;
+
+    Label _title_label {
+      justify: center;
+      max-width-chars: 65;
+      wrap: true;
+
+      styles [
+        "title-1",
+      ]
+    }
+
+    Label _subtitle_label {
+      justify: center;
+      max-width-chars: 65;
+      wrap: true;
+    }
+  }
+}

@@ -6,7 +6,8 @@ template $VanillaDefaultNetwork: Adw.Bin {
   vexpand: true;
 
   Overlay {
-    valign: center;
+    vexpand: true;
+    hexpand: true;
 
     [overlay]
     Button btn_next {
@@ -25,63 +26,65 @@ template $VanillaDefaultNetwork: Adw.Bin {
       ]
     }
 
-    Adw.StatusPage {
-      title: _("Internet");
-      description: _("An active internet connection is required to install the system");
-      icon-name: "network-wireless-symbolic";
+    ScrolledWindow {
+      hscrollbar-policy: never;
+      vexpand: true;
+      hexpand: true;
 
-      Adw.Clamp {
-        maximum-size: 600;
-
-        Box {
-          orientation: vertical;
-          hexpand: false;
-
-          Adw.PreferencesGroup wired_group {
-            title: _("Wired");
+      Adw.PreferencesPage {
+        Adw.PreferencesGroup {
+          $TunaPageHeader page_header {
+            margin-top: 24;
+            icon-name: "network-wireless-symbolic";
+            title: _("Internet");
+            subtitle: _("An active internet connection is required to install the system");
           }
+        }
 
-          Adw.PreferencesGroup wireless_group {
-            title: _("Wireless Networks");
-          }
+        Adw.PreferencesGroup wired_group {
+          title: _("Wired");
+        }
 
-          Adw.PreferencesGroup advanced_group {
-            title: _("Advanced");
+        Adw.PreferencesGroup wireless_group {
+          title: _("Wireless Networks");
+        }
 
-            Adw.ActionRow hidden_network_row {
-              title: _("Connect to Hidden Network...");
+        Adw.PreferencesGroup advanced_group {
+          title: _("Advanced");
 
-              [prefix]
-              Overlay {
-                vexpand: false;
-                hexpand: false;
-                margin-end: 10;
+          Adw.ActionRow hidden_network_row {
+            title: _("Connect to Hidden Network...");
 
-                Image {
-                  icon-name: "network-wireless-signal-none-symbolic";
-                }
+            [prefix]
+            Overlay {
+              vexpand: false;
+              hexpand: false;
+              margin-end: 10;
 
-                [overlay]
-                Image {
-                  valign: end;
-                  halign: start;
-                  margin-start: 10;
-                  margin-bottom: 10;
-                  icon-name: "background-app-ghost-symbolic";
-                  pixel-size: 14;
-                }
+              Image {
+                icon-name: "network-wireless-signal-none-symbolic";
+              }
+
+              [overlay]
+              Image {
+                valign: end;
+                halign: start;
+                margin-start: 10;
+                margin-bottom: 10;
+                icon-name: "background-app-ghost-symbolic";
+                pixel-size: 14;
               }
             }
+          }
 
-            Adw.ActionRow proxy_settings_row {
-              title: _("Open Proxy Settings...");
+          Adw.ActionRow proxy_settings_row {
+            title: _("Open Proxy Settings...");
 
-              [prefix]
-              Image {
-                margin-start: 5;
-                margin-end: 5;
-                icon-name: "preferences-system-network-proxy-symbolic";
-              }
+            [prefix]
+            Image {
+              margin-start: 5;
+              margin-end: 5;
+              icon-name: "preferences-system-network-proxy-symbolic";
             }
           }
         }

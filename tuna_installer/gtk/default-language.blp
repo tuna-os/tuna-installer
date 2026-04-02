@@ -5,7 +5,8 @@ template $VanillaDefaultLanguage: Adw.Bin {
   hexpand: true;
 
   Overlay {
-    valign: center;
+    vexpand: true;
+    hexpand: true;
 
     [overlay]
     Button btn_next {
@@ -24,28 +25,31 @@ template $VanillaDefaultLanguage: Adw.Bin {
       ]
     }
 
-    Adw.StatusPage status_page {
-      icon-name: "preferences-desktop-locale-symbolic";
-      title: _("Language");
-      description: _("Select your language");
+    ScrolledWindow {
+      hscrollbar-policy: never;
+      vexpand: true;
+      hexpand: true;
 
-      Adw.Clamp {
-        maximum-size: 600;
+      Adw.PreferencesPage {
+        Adw.PreferencesGroup {
+          $TunaPageHeader page_header {
+            margin-top: 24;
+            icon-name: "preferences-desktop-locale-symbolic";
+            title: _("Language");
+            subtitle: _("Select your language");
+          }
+        }
 
-        Box {
-          orientation: vertical;
-
+        Adw.PreferencesGroup {
           SearchEntry entry_search_language {
             hexpand: true;
             placeholder-text: _("Search languages");
           }
 
-          Adw.PreferencesGroup {
-            ListBox all_languages_group {
-              styles [
-                "boxed-list",
-              ]
-            }
+          ListBox all_languages_group {
+            styles [
+              "boxed-list",
+            ]
           }
         }
       }

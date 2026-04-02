@@ -33,6 +33,7 @@ blueprints = custom_target(
     'gtk/progress.blp',
     'gtk/tour.blp',
     'gtk/widget-choice.blp',
+    'gtk/widget-page-header.blp',
     'gtk/widget-choice-expander.blp',
     'gtk/widget-disk.blp',
     'gtk/widget-keyboard.blp',
@@ -95,6 +96,7 @@ subdir('layouts')
 subdir('core')
 subdir('utils')
 subdir('views')
+subdir('widgets')
 subdir('windows')
 
 tuna_installer_sources = [

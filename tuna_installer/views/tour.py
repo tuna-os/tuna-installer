@@ -26,7 +26,7 @@ from gi.repository import Adw, Gtk
 class VanillaTour(Adw.Bin):
     __gtype_name__ = "VanillaTour"
 
-    status_page = Gtk.Template.Child()
+    page_header = Gtk.Template.Child()
     assets_svg = Gtk.Template.Child()
 
     def __init__(self, window, tour, **kwargs):
@@ -36,8 +36,8 @@ class VanillaTour(Adw.Bin):
         self.__build_ui()
 
     def __build_ui(self):
-        self.status_page.set_title(self.__tour.get("title", ""))
-        self.status_page.set_description(self.__tour.get("description", ""))
+        self.page_header.title = self.__tour.get("title", "")
+        self.page_header.subtitle = self.__tour.get("description", "")
 
         # Support both the recipe.json format ("resource": "/org/...") and the
         # images.json carousel format ("image": "resource:///org/..." or "/path/file").

@@ -7,7 +7,8 @@ template $VanillaDefaultDisk: Adw.Bin {
   hexpand: true;
 
   Overlay {
-    valign: center;
+    vexpand: true;
+    hexpand: true;
 
     [overlay]
     Button btn_next {
@@ -41,14 +42,23 @@ template $VanillaDefaultDisk: Adw.Bin {
       ]
     }
 
-    Adw.StatusPage status_page {
-      icon-name: "vanilla-installer-harddisk-symbolic";
-      title: _("Install Location");
-      description: _(
-        "Select the disk where you want to install. Alternatively, you can select one or more disks to configure manually."
-      );
+    ScrolledWindow {
+      hscrollbar-policy: never;
+      vexpand: true;
+      hexpand: true;
 
       Adw.PreferencesPage {
+        Adw.PreferencesGroup {
+          $TunaPageHeader page_header {
+            margin-top: 24;
+            icon-name: "vanilla-installer-harddisk-symbolic";
+            title: _("Install Location");
+            subtitle: _(
+              "Select the disk where you want to install. Alternatively, you can select one or more disks to configure manually."
+            );
+          }
+        }
+
         Adw.PreferencesGroup group_disks {}
 
         Adw.PreferencesGroup {

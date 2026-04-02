@@ -25,7 +25,7 @@ from tuna_installer.windows.dialog_poweroff import VanillaPoweroffDialog
 class VanillaDefaultWelcome(Adw.Bin):
     __gtype_name__ = "VanillaDefaultWelcome"
 
-    status_page = Gtk.Template.Child()
+    page_header = Gtk.Template.Child()
     row_install = Gtk.Template.Child()
     row_install_custom = Gtk.Template.Child()
     row_recovery = Gtk.Template.Child()
@@ -42,8 +42,8 @@ class VanillaDefaultWelcome(Adw.Bin):
         distro_name = self.__distro_info.get("name", "TunaOS")
         distro_logo = self.__distro_info.get("logo", "org.tunaos.Installer")
 
-        self.status_page.set_icon_name(distro_logo)
-        self.status_page.set_title(f"Welcome to {distro_name}!")
+        self.page_header.icon_name = distro_logo
+        self.page_header.title = f"Welcome to {distro_name}!"
 
         # signals
         self.row_install.connect("activated", self.__install)

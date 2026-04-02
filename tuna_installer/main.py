@@ -41,6 +41,8 @@ logger_boot.info("gi.require_version done")
 from gi.repository import Adw, Gio
 logger_boot.info("Adw/Gio imported")
 
+from tuna_installer.widgets.page_header import TunaPageHeader  # noqa: F401 — must load before blueprints
+logger_boot.info("TunaPageHeader imported")
 from tuna_installer.windows.main_window import VanillaWindow
 logger_boot.info("VanillaWindow imported")
 from tuna_installer.windows.window_unsupported import VanillaUnsupportedWindow

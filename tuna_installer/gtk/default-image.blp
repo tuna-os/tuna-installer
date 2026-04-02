@@ -8,7 +8,8 @@ template $VanillaDefaultImage: Adw.Bin {
   vexpand: true;
 
   Overlay {
-    valign: center;
+    vexpand: true;
+    hexpand: true;
 
     [overlay]
     Button btn_next {
@@ -27,55 +28,66 @@ template $VanillaDefaultImage: Adw.Bin {
       ]
     }
 
-    Adw.StatusPage {
-      icon-name: "media-optical-symbolic";
-      title: _("Choose an Image");
-      description: _("Select a TunaOS image to install, or enter a custom bootc-compatible image URL.");
+    ScrolledWindow {
+      hscrollbar-policy: never;
+      vexpand: true;
+      hexpand: true;
 
-      Box {
-        orientation: vertical;
-        spacing: 12;
-        hexpand: true;
-        margin-start: 18;
-        margin-end: 18;
-        margin-bottom: 72;
-
-        SearchEntry search_entry {
-          hexpand: true;
-          placeholder-text: _("Search images…");
-        }
-
-        ScrolledWindow {
-          hexpand: true;
-          vexpand: true;
-          min-content-height: 260;
-          max-content-height: 420;
-          has-frame: false;
-
-          ListBox list_images {
-            selection-mode: single;
-            hexpand: true;
-
-            styles [
-              "boxed-list",
-            ]
+      Adw.PreferencesPage {
+        Adw.PreferencesGroup {
+          $TunaPageHeader page_header {
+            margin-top: 24;
+            icon-name: "media-optical-symbolic";
+            title: _("Choose an Image");
+            subtitle: _("Select a TunaOS image to install, or enter a custom bootc-compatible image URL.");
           }
         }
 
-        ListBox list_custom {
-          selection-mode: none;
-          hexpand: true;
+        Adw.PreferencesGroup {
+          Box {
+            orientation: vertical;
+            spacing: 12;
+            hexpand: true;
+            margin-bottom: 72;
 
-          styles [
-            "boxed-list",
-          ]
+            SearchEntry search_entry {
+              hexpand: true;
+              placeholder-text: _("Search images…");
+            }
 
-          Adw.ExpanderRow row_custom {
-            title: _("Custom bootc image");
-            subtitle: _("Enter any OCI image reference");
+            ScrolledWindow {
+              hexpand: true;
+              vexpand: true;
+              min-content-height: 260;
+              max-content-height: 420;
+              has-frame: false;
 
-            Adw.EntryRow image_url_entry {
-              title: _("Image URL");
+              ListBox list_images {
+                selection-mode: single;
+                hexpand: true;
+
+                styles [
+                  "boxed-list",
+                ]
+              }
+            }
+
+            ListBox list_custom {
+              selection-mode: none;
+              hexpand: true;
+
+              styles [
+                "boxed-list",
+              ]
+
+              Adw.ExpanderRow row_custom {
+                title: _("Custom bootc image");
+                subtitle: _("Enter any OCI image reference");
+
+                Adw.EntryRow image_url_entry {
+                  title: _("Image URL");
+                }
+              }
             }
           }
         }

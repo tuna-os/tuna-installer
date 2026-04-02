@@ -6,42 +6,45 @@ template $VanillaDefaultVm: Adw.Bin {
   valign: fill;
   hexpand: true;
 
-  Adw.StatusPage status_page {
-    halign: fill;
-    valign: fill;
+  ScrolledWindow {
+    hscrollbar-policy: never;
+    vexpand: true;
     hexpand: true;
-    icon-name: "video-display-symbolic";
-    title: _("VM Tools");
-    description: _("Choose whether to install VM Tools for better compatibility and performance");
 
-    Box {
-      orientation: vertical;
-      vexpand: true;
-      hexpand: true;
-      valign: center;
-
-      Box {
-        valign: center;
-        spacing: 10;
-        halign: center;
-
-        Button btn_no {
-          label: _("Skip");
-          halign: center;
-
-          styles [
-            "pill",
-          ]
+    Adw.PreferencesPage {
+      Adw.PreferencesGroup {
+        $TunaPageHeader page_header {
+          margin-top: 24;
+          icon-name: "video-display-symbolic";
+          title: _("VM Tools");
+          subtitle: _("Choose whether to install VM Tools for better compatibility and performance");
         }
+      }
 
-        Button btn_yes {
-          label: _("Install");
+      Adw.PreferencesGroup {
+        Box {
+          valign: center;
+          spacing: 10;
           halign: center;
 
-          styles [
-            "pill",
-            "suggested-action",
-          ]
+          Button btn_no {
+            label: _("Skip");
+            halign: center;
+
+            styles [
+              "pill",
+            ]
+          }
+
+          Button btn_yes {
+            label: _("Install");
+            halign: center;
+
+            styles [
+              "pill",
+              "suggested-action",
+            ]
+          }
         }
       }
     }

@@ -23,7 +23,7 @@ from tuna_installer.windows.dialog import VanillaDialog
 class VanillaLayoutYesNo(Adw.Bin):
     __gtype_name__ = "VanillaLayoutYesNo"
 
-    status_page = Gtk.Template.Child()
+    page_header = Gtk.Template.Child()
     btn_no = Gtk.Template.Child()
     btn_yes = Gtk.Template.Child()
     btn_info = Gtk.Template.Child()
@@ -43,9 +43,9 @@ class VanillaLayoutYesNo(Adw.Bin):
         self.btn_info.connect("clicked", self.__on_info)
 
     def __build_ui(self):
-        self.status_page.set_icon_name(self.__step["icon"])
-        self.status_page.set_title(self.__step["title"])
-        self.status_page.set_description(self.__step["description"])
+        self.page_header.icon_name = self.__step["icon"]
+        self.page_header.title = self.__step["title"]
+        self.page_header.subtitle = self.__step["description"]
 
         self.btn_yes.set_label(self.__step["buttons"]["yes"])
         self.btn_no.set_label(self.__step["buttons"]["no"])

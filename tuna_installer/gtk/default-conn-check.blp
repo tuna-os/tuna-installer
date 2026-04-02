@@ -6,18 +6,32 @@ template $VanillaDefaultConnCheck: Adw.Bin {
   valign: fill;
   hexpand: true;
 
-  Adw.StatusPage status_page {
-    icon-name: "content-loading-symbolic";
-    title: _("Checking Connection");
-    description: _("Please wait until the connection check is done");
+  ScrolledWindow {
+    hscrollbar-policy: never;
+    vexpand: true;
+    hexpand: true;
 
-    Button btn_recheck {
-      label: "Check Again";
-      halign: center;
+    Adw.PreferencesPage {
+      Adw.PreferencesGroup {
+        $TunaPageHeader page_header {
+          margin-top: 24;
+          icon-name: "content-loading-symbolic";
+          title: _("Checking Connection");
+          subtitle: _("Please wait until the connection check is done");
+        }
+      }
 
-      styles [
-        "pill",
-      ]
+      Adw.PreferencesGroup {
+        Button btn_recheck {
+          label: "Check Again";
+          halign: center;
+          visible: false;
+
+          styles [
+            "pill",
+          ]
+        }
+      }
     }
   }
 }

@@ -14,7 +14,6 @@ class VanillaDefaultUsers(Adw.Bin):
     __gtype_name__ = "VanillaDefaultUsers"
 
     btn_next           = Gtk.Template.Child()
-    status_page        = Gtk.Template.Child()
     fullname_entry     = Gtk.Template.Child()
     username_entry     = Gtk.Template.Child()
     password_entry     = Gtk.Template.Child()

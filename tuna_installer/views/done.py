@@ -5,20 +5,21 @@ from gettext import gettext as _
 
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
+from tuna_installer.widgets.page_header import TunaPageHeader  # noqa: F401
 from tuna_installer.windows.dialog_output import VanillaDialogOutput
 
 log = logging.getLogger("Installer::Done")
 
 
-def apply_icon(status_page, icon_spec):
-    """Set the status page icon from a resource:// URI or an icon-theme name."""
+def apply_icon(page_header, icon_spec):
+    """Set the page header icon from a resource:// URI or an icon-theme name."""
     try:
         if icon_spec.startswith("resource://"):
             resource_path = icon_spec[len("resource://"):]
             texture = Gdk.Texture.new_from_resource(resource_path)
-            status_page.set_paintable(texture)
+            page_header.set_paintable(texture)
         else:
-            status_page.set_icon_name(icon_spec)
+            page_header.icon_name = icon_spec
     except Exception:
         pass  # keep the default icon on any failure
 
@@ -63,7 +64,7 @@ def do_reboot(in_flatpak):
 class VanillaDone(Adw.Bin):
     __gtype_name__ = "VanillaDone"
 
-    status_page = Gtk.Template.Child()
+    page_header = Gtk.Template.Child()
     btn_reboot = Gtk.Template.Child()
     btn_close = Gtk.Template.Child()
     btn_log = Gtk.Template.Child()
@@ -86,18 +87,16 @@ class VanillaDone(Adw.Bin):
         if result:
             pretty_name = getattr(self.__window, "pretty_name", None) \
                 or self.__window.recipe.get("distro_name", "the operating system")
-            self.status_page.set_description(
+            self.page_header.subtitle = (
                 _("Restart your device to enjoy your {} experience.").format(pretty_name)
             )
             icon_spec = getattr(self.__window, "selected_icon", None)
             if icon_spec:
-                apply_icon(self.status_page, icon_spec)
+                apply_icon(self.page_header, icon_spec)
         else:
-            self.status_page.set_icon_name("dialog-error-symbolic")
-            self.status_page.set_title(_("Something went wrong"))
-            self.status_page.set_description(
-                _("Please contact the distribution developers.")
-            )
+            self.page_header.icon_name = "dialog-error-symbolic"
+            self.page_header.title = _("Something went wrong")
+            self.page_header.subtitle = _("Please contact the distribution developers.")
             self.btn_reboot.set_visible(False)
             self.btn_close.set_visible(True)
 

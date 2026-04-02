@@ -7,7 +7,8 @@ template $VanillaDefaultUsers: Adw.Bin {
   hexpand: true;
 
   Overlay {
-    valign: center;
+    vexpand: true;
+    hexpand: true;
 
     [overlay]
     Button btn_next {
@@ -26,41 +27,48 @@ template $VanillaDefaultUsers: Adw.Bin {
       ]
     }
 
-    Box {
-      orientation: vertical;
+    ScrolledWindow {
+      hscrollbar-policy: never;
+      vexpand: true;
+      hexpand: true;
 
-      Adw.Avatar {
-        valign: center;
-        size: 128;
-        show-initials: true;
-        text: bind fullname_entry.text;
-      }
+      Adw.PreferencesPage {
+        Adw.PreferencesGroup {
+          $TunaPageHeader page_header {
+            margin-top: 24;
+            title: _("Create User");
+            subtitle: _("Provide details for your user account");
+          }
+        }
 
-      Adw.StatusPage status_page {
-        title: _("Create User");
-        description: _("Provide details for your user account");
+        Adw.PreferencesGroup {
+          Adw.Avatar {
+            valign: center;
+            size: 128;
+            show-initials: true;
+            text: bind fullname_entry.text;
+          }
+        }
 
-        Adw.PreferencesPage {
-          Adw.PreferencesGroup {
-            Adw.EntryRow fullname_entry {
-              title: _("Name");
-              input-purpose: name;
-            }
+        Adw.PreferencesGroup {
+          Adw.EntryRow fullname_entry {
+            title: _("Name");
+            input-purpose: name;
+          }
 
-            Adw.EntryRow username_entry {
-              title: _("Username");
-              input-purpose: name;
-            }
+          Adw.EntryRow username_entry {
+            title: _("Username");
+            input-purpose: name;
+          }
 
-            Adw.PasswordEntryRow password_entry {
-              title: _("Password");
-              input-purpose: password;
-            }
+          Adw.PasswordEntryRow password_entry {
+            title: _("Password");
+            input-purpose: password;
+          }
 
-            Adw.PasswordEntryRow password_confirmation {
-              title: _("Confirm Password");
-              input-purpose: password;
-            }
+          Adw.PasswordEntryRow password_confirmation {
+            title: _("Confirm Password");
+            input-purpose: password;
           }
         }
       }

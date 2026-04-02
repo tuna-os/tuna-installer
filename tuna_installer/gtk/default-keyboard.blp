@@ -15,7 +15,8 @@ template $VanillaDefaultKeyboard: Adw.Bin {
     }
 
     Overlay {
-      valign: center;
+      vexpand: true;
+      hexpand: true;
 
       [overlay]
       Button btn_next {
@@ -32,30 +33,31 @@ template $VanillaDefaultKeyboard: Adw.Bin {
         ]
       }
 
-      Adw.StatusPage status_page {
-        hexpand: true;
+      ScrolledWindow {
+        hscrollbar-policy: never;
         vexpand: true;
-        icon-name: "input-keyboard-symbolic";
-        title: _("Keyboard Layout");
-        description: _("Select your preferred keyboard layout");
+        hexpand: true;
 
-        Adw.Clamp {
-          maximum-size: 600;
+        Adw.PreferencesPage {
+          Adw.PreferencesGroup {
+            $TunaPageHeader page_header {
+              margin-top: 24;
+              icon-name: "input-keyboard-symbolic";
+              title: _("Keyboard Layout");
+              subtitle: _("Select your preferred keyboard layout");
+            }
+          }
 
-          Box {
-            orientation: vertical;
-
+          Adw.PreferencesGroup {
             SearchEntry entry_search_keyboard {
               hexpand: true;
               placeholder-text: _("Search keyboard layouts");
             }
 
-            Adw.PreferencesGroup {
-              ListBox all_keyboards_group {
-                styles [
-                  "boxed-list",
-                ]
-              }
+            ListBox all_keyboards_group {
+              styles [
+                "boxed-list",
+              ]
             }
           }
         }

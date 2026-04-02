@@ -6,80 +6,83 @@ template $VanillaDefaultNvidia: Adw.Bin {
   valign: fill;
   hexpand: true;
 
-  Adw.StatusPage status_page {
-    halign: fill;
-    valign: fill;
+  ScrolledWindow {
+    hscrollbar-policy: never;
+    vexpand: true;
     hexpand: true;
-    icon-name: "video-display-symbolic";
-    title: _("NVIDIA® Drivers");
-    description: _("Choose whether to install proprietary NVIDIA drivers for better compatibility and performance");
 
-    Box {
-      orientation: vertical;
-      vexpand: true;
-      hexpand: true;
-      valign: center;
-
-      Box {
-        valign: center;
-        spacing: 10;
-        halign: center;
-
-        Button btn_no {
-          label: _("Skip");
-          halign: center;
-
-          styles [
-            "pill",
-          ]
+    Adw.PreferencesPage {
+      Adw.PreferencesGroup {
+        $TunaPageHeader page_header {
+          margin-top: 24;
+          icon-name: "video-display-symbolic";
+          title: _("NVIDIA® Drivers");
+          subtitle: _("Choose whether to install proprietary NVIDIA drivers for better compatibility and performance");
         }
+      }
 
-        Button btn_yes {
-          label: _("Install");
-          halign: center;
-
-          styles [
-            "pill",
-            "suggested-action",
-          ]
-        }
-
+      Adw.PreferencesGroup {
         Box {
-          Button btn_info {
-            icon-name: "dialog-information-symbolic";
+          valign: center;
+          spacing: 10;
+          halign: center;
+
+          Button btn_no {
+            label: _("Skip");
+            halign: center;
 
             styles [
-              "flat",
+              "pill",
             ]
           }
 
-          Popover info_popover {
-            child: Box {
-              orientation: vertical;
-              spacing: 10;
-              vexpand: true;
-              halign: center;
-              margin-top: 10;
-              margin-bottom: 10;
-              margin-start: 10;
-              margin-end: 10;
+          Button btn_yes {
+            label: _("Install");
+            halign: center;
 
-              Label {
-                label: _("About Proprietary Drivers");
+            styles [
+              "pill",
+              "suggested-action",
+            ]
+          }
 
-                styles [
-                  "title-4",
-                ]
-              }
+          Box {
+            Button btn_info {
+              icon-name: "dialog-information-symbolic";
 
-              Label {
-                label: _(
-                  "A proprietary driver has private code that neither Vanilla OS nor Debian developers can review.\n\nSecurity and other updates are dependent on the driver vendor."
-                );
-                wrap: true;
-                max-width-chars: 50;
-              }
-            };
+              styles [
+                "flat",
+              ]
+            }
+
+            Popover info_popover {
+              child: Box {
+                orientation: vertical;
+                spacing: 10;
+                vexpand: true;
+                halign: center;
+                margin-top: 10;
+                margin-bottom: 10;
+                margin-start: 10;
+                margin-end: 10;
+
+                Label {
+                  label: _("About Proprietary Drivers");
+
+                  styles [
+                    "title-4",
+                  ]
+                }
+
+                Label {
+                  label: _(
+                    "A proprietary driver has private code that neither Vanilla OS nor Debian developers can review.\n\nSecurity and other updates are dependent on the driver vendor."
+                  );
+                  wrap: true;
+                  max-width-chars: 50;
+                }
+              };
+            }
           }
         }
       }

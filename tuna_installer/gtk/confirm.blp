@@ -6,33 +6,34 @@ template $VanillaConfirm: Adw.Bin {
   valign: fill;
   hexpand: true;
 
-  Adw.StatusPage status_page {
-    title: _("Confirm Installation");
-    description: _("The following changes will be made to your system");
+  ScrolledWindow {
+    hscrollbar-policy: never;
+    vexpand: true;
+    hexpand: true;
 
-    Adw.Clamp {
-      maximum-size: 570;
+    Adw.PreferencesPage {
+      hexpand: true;
 
-      Box {
-        orientation: vertical;
+      Adw.PreferencesGroup {
+        $TunaPageHeader page_header {
+          margin-top: 24;
+          title: _("Confirm Installation");
+          subtitle: _("The following changes will be made to your system");
+        }
+      }
 
-        Adw.PreferencesPage {
-          hexpand: true;
+      Adw.PreferencesGroup group_changes {}
 
-          Adw.PreferencesGroup group_changes {}
+      Adw.PreferencesGroup {
+        Button btn_confirm {
+          label: _("Install");
+          valign: center;
+          halign: center;
 
-          Adw.PreferencesGroup {
-            Button btn_confirm {
-              label: _("Install");
-              valign: center;
-              halign: center;
-
-              styles [
-                "destructive-action",
-                "pill",
-              ]
-            }
-          }
+          styles [
+            "destructive-action",
+            "pill",
+          ]
         }
       }
     }

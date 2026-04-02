@@ -8,7 +8,8 @@ template $VanillaDefaultTimezone: Adw.Bin {
     orientation: vertical;
 
     Overlay {
-      valign: center;
+      vexpand: true;
+      hexpand: true;
 
       [overlay]
       Button btn_next {
@@ -27,17 +28,22 @@ template $VanillaDefaultTimezone: Adw.Bin {
         ]
       }
 
-      Adw.StatusPage status_page {
-        icon-name: "preferences-system-time-symbolic";
-        title: _("Date & Time");
-        description: _("Select your preferred timezone");
+      ScrolledWindow {
+        hscrollbar-policy: never;
+        vexpand: true;
+        hexpand: true;
 
-        Adw.Clamp {
-          maximum-size: 600;
+        Adw.PreferencesPage {
+          Adw.PreferencesGroup {
+            $TunaPageHeader page_header {
+              margin-top: 24;
+              icon-name: "preferences-system-time-symbolic";
+              title: _("Date & Time");
+              subtitle: _("Select your preferred timezone");
+            }
+          }
 
-          Box {
-            orientation: vertical;
-
+          Adw.PreferencesGroup {
             SearchEntry entry_search_timezone {
               hexpand: true;
               placeholder-text: _("Search timezones");
