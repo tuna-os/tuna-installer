@@ -255,11 +255,16 @@ class VanillaWindow(Adw.ApplicationWindow):
         else:
             self.finals = json.loads(os.environ["VANILLA_FORCE_TOUR"])
 
-        # extract the pretty name from whichever image finals key is present
+        # extract the pretty name and icon from whichever image finals key is present
         self.pretty_name = None
+        self.selected_icon = None
         for f in self.finals:
-            if isinstance(f, dict) and "pretty_name" in f:
-                self.pretty_name = f["pretty_name"]
+            if isinstance(f, dict):
+                if self.pretty_name is None and "pretty_name" in f:
+                    self.pretty_name = f["pretty_name"]
+                if self.selected_icon is None and "icon" in f:
+                    self.selected_icon = f["icon"]
+            if self.pretty_name and self.selected_icon:
                 break
 
         self.__view_confirm.update(self.finals)

@@ -1,26 +1,62 @@
-# done.py
-#
-# Copyright 2024 mirkobrombin
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundationat version 3 of the License.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+import logging
 import os
 import subprocess
 from gettext import gettext as _
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 from tuna_installer.windows.dialog_output import VanillaDialogOutput
+
+log = logging.getLogger("Installer::Done")
+
+
+def apply_icon(status_page, icon_spec):
+    """Set the status page icon from a resource:// URI or an icon-theme name."""
+    try:
+        if icon_spec.startswith("resource://"):
+            resource_path = icon_spec[len("resource://"):]
+            texture = Gdk.Texture.new_from_resource(resource_path)
+            status_page.set_paintable(texture)
+        else:
+            status_page.set_icon_name(icon_spec)
+    except Exception:
+        pass  # keep the default icon on any failure
+
+
+def do_reboot(in_flatpak):
+    """Attempt to reboot. Returns True if a reboot command succeeded."""
+    # Preferred: logind D-Bus — works correctly from inside the Flatpak
+    # sandbox and handles polkit transparently.
+    try:
+        conn = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+        conn.call_sync(
+            "org.freedesktop.login1",
+            "/org/freedesktop/login1",
+            "org.freedesktop.login1.Manager",
+            "Reboot",
+            GLib.Variant("(b)", (False,)),
+            None,
+            Gio.DBusCallFlags.NONE,
+            -1,
+            None,
+        )
+        return True
+    except Exception as e:
+        log.warning("logind D-Bus reboot failed: %s", e)
+
+    # Fallback: spawn systemctl / reboot on the host.
+    cmds = [["systemctl", "reboot"], ["reboot"]]
+    for cmd in cmds:
+        argv = (["flatpak-spawn", "--host"] + cmd) if in_flatpak else cmd
+        try:
+            result = subprocess.run(argv, capture_output=True)
+            if result.returncode == 0:
+                return True
+            log.warning("%s exited %d: %s", argv, result.returncode, result.stderr.decode())
+        except Exception as e:
+            log.warning("%s failed: %s", argv, e)
+
+    return False
 
 
 @Gtk.Template(resource_path="/org/tunaos/Installer/gtk/done.ui")
@@ -53,6 +89,9 @@ class VanillaDone(Adw.Bin):
             self.status_page.set_description(
                 _("Restart your device to enjoy your {} experience.").format(pretty_name)
             )
+            icon_spec = getattr(self.__window, "selected_icon", None)
+            if icon_spec:
+                apply_icon(self.status_page, icon_spec)
         else:
             self.status_page.set_icon_name("dialog-error-symbolic")
             self.status_page.set_title(_("Something went wrong"))
@@ -64,6 +103,7 @@ class VanillaDone(Adw.Bin):
 
     def __on_reboot_clicked(self, button):
         in_flatpak = os.path.exists("/.flatpak-info")
+
         if self.__boot_id:
             # Set BootNext so the firmware boots the newly installed drive on
             # the next boot, even if the install media is still plugged in.
@@ -78,14 +118,18 @@ class VanillaDone(Adw.Bin):
             except Exception as e:
                 # Non-fatal — the user can always pick the right entry in the
                 # BIOS/UEFI boot menu if this fails.
-                import logging
-                logging.getLogger("Installer::Done").warning(
-                    "Could not set BootNext to %s: %s", self.__boot_id, e
-                )
-        if in_flatpak:
-            subprocess.run(["flatpak-spawn", "--host", "systemctl", "reboot"])
-        else:
-            subprocess.run(["systemctl", "reboot"])
+                log.warning("Could not set BootNext to %s: %s", self.__boot_id, e)
+
+        if not do_reboot(in_flatpak):
+            self.__show_reboot_error()
+
+    def __show_reboot_error(self):
+        dialog = Adw.AlertDialog.new(
+            _("Could not reboot"),
+            _("Please reboot manually by running: systemctl reboot"),
+        )
+        dialog.add_response("ok", _("OK"))
+        dialog.present(self)
 
     def __on_close_clicked(self, button):
         self.__window.close()
@@ -93,3 +137,5 @@ class VanillaDone(Adw.Bin):
     def __on_log_clicked(self, button):
         dialog = VanillaDialogOutput(self.__window)
         dialog.present()
+
+

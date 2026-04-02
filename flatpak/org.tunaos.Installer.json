@@ -12,6 +12,7 @@
         "--device=all",
         "--filesystem=host",
         "--talk-name=org.freedesktop.Flatpak",
+        "--system-talk-name=org.freedesktop.login1",
         "--system-talk-name=org.freedesktop.PolicyKit1",
         "--allow=devel"
     ],
