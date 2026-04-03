@@ -27,7 +27,6 @@ class VanillaDefaultWelcome(Adw.Bin):
 
     page_header = Gtk.Template.Child()
     row_install = Gtk.Template.Child()
-    row_install_custom = Gtk.Template.Child()
     row_recovery = Gtk.Template.Child()
     row_poweroff = Gtk.Template.Child()
 
@@ -47,7 +46,6 @@ class VanillaDefaultWelcome(Adw.Bin):
 
         # signals
         self.row_install.connect("activated", self.__install)
-        self.row_install_custom.connect("activated", self.__install_custom)
         self.row_recovery.connect("activated", self.__on_recovery_clicked)
         self.row_poweroff.connect("activated", self.__on_poweroff_clicked)
 
@@ -66,9 +64,4 @@ class VanillaDefaultWelcome(Adw.Bin):
     def __install(self, _):
         if self.__window.install_mode == 1:
             self.__window.rebuild_ui(0)
-        self.__window.next()
-
-    def __install_custom(self, _):
-        if self.__window.install_mode == 0:
-            self.__window.rebuild_ui()
         self.__window.next()

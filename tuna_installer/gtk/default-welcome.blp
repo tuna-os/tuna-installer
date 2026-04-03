@@ -35,22 +35,6 @@ template $VanillaDefaultWelcome: Adw.Bin {
           }
         }
 
-        Adw.ActionRow row_install_custom {
-          title: _("Install Custom Image (Advanced)");
-          icon-name: "media-optical-cd-audio-symbolic";
-          activatable: true;
-
-          Image {
-            icon-name: "go-next-symbolic";
-            halign: center;
-            valign: center;
-
-            styles [
-              "flat",
-            ]
-          }
-        }
-
         Adw.ActionRow row_recovery {
           title: _("Recovery");
           icon-name: "emoji-symbols-symbolic";

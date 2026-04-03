@@ -311,9 +311,9 @@ class VanillaProgress(Gtk.Box):
     def _start_log_watcher(self):
         """Begin tailing fisherman-output.log for JSON progress events.
 
-        Polls until the file exists (fisherman creates it at startup), then
-        registers a GLib.io_add_watch so the GTK main loop wakes only when
-        new bytes arrive — no VTE buffer scraping, no main-loop starvation.
+        Polls until the file exists, then reads new data every 100ms.
+        GLib.io_add_watch does not work on regular files (only pipes/sockets),
+        so we use a timer-based poll instead.
         """
         GLib.timeout_add(200, self.__try_open_log_for_watching)
 
@@ -322,41 +322,25 @@ class VanillaProgress(Gtk.Box):
             return True  # retry
         try:
             self.__log_file = open(_FISHERMAN_LOG_PATH, "r")
-            GLib.io_add_watch(
-                self.__log_file.fileno(),
-                GLib.IOCondition.IN | GLib.IOCondition.HUP,
-                self.__on_log_data,
-            )
+            GLib.timeout_add(100, self.__poll_log_file)
             logger.info("Log watcher started on %s", _FISHERMAN_LOG_PATH)
             return False  # stop retrying
         except OSError:
             return True  # retry
 
-    def __on_log_data(self, fd, condition) -> bool:
-        """GLib.io_add_watch callback: read new lines from the log file."""
-        if condition & GLib.IOCondition.IN:
-            new_text = self.__log_file.read()
+    def __poll_log_file(self) -> bool:
+        """Read any new data from the log file into the TextView. Runs every 100ms."""
+        if self.__log_file is None:
+            return False
+        new_text = self.__log_file.read()
+        if new_text:
             self.__log_linebuf += new_text
             lines = self.__log_linebuf.split("\n")
-            self.__log_linebuf = lines[-1]  # preserve incomplete trailing line
+            self.__log_linebuf = lines[-1]
             for line in lines[:-1]:
                 self.__parse_progress_line(line.strip())
                 self.__append_log_line(line)
-
-        if condition & GLib.IOCondition.HUP:
-            # Drain any remaining buffered data after the process exits.
-            remaining = self.__log_file.read()
-            if remaining:
-                self.__log_linebuf += remaining
-            for line in self.__log_linebuf.split("\n"):
-                if line.strip():
-                    self.__parse_progress_line(line.strip())
-                    self.__append_log_line(line)
-            self.__log_file.close()
-            self.__log_file = None
-            return False  # stop watching
-
-        return True  # keep watching
+        return True  # keep polling until __finish_install sets __log_file = None
 
     def __append_log_line(self, line: str):
         """Append a line to the TextView buffer and auto-scroll."""
@@ -381,6 +365,24 @@ class VanillaProgress(Gtk.Box):
             self.__log_out.flush()
             self.__log_out.close()
             self.__log_out = None
+        # Give the log poller 300ms to drain any last bytes before finishing.
+        GLib.timeout_add(300, self.__finish_install, ret)
+        return False
+
+    def __finish_install(self, ret: int) -> bool:
+        """Final log drain then hand off to the done screen."""
+        if self.__log_file:
+            remaining = self.__log_file.read()
+            if remaining:
+                self.__log_linebuf += remaining
+            lines = (self.__log_linebuf + "\n").split("\n")
+            self.__log_linebuf = ""
+            for line in lines:
+                if line.strip():
+                    self.__parse_progress_line(line.strip())
+                    self.__append_log_line(line)
+            self.__log_file.close()
+            self.__log_file = None
         self.__window.set_installation_result(ret == 0, None, self.__boot_id)
         return False
 
