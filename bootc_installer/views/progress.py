@@ -399,6 +399,14 @@ class VanillaProgress(Gtk.Box):
 
         argv = _fisherman_argv_direct(recipe)
         os.makedirs(_FISHERMAN_CACHE_DIR, exist_ok=True)
+        # Remove any stale log file before launching so the watcher always opens
+        # a fresh file at position 0. If the old file exists, bash's '>' redirect
+        # truncates it but Python's file handle would still sit at the old EOF,
+        # causing read() to return empty even though new content is present.
+        try:
+            os.unlink(_FISHERMAN_LOG_PATH)
+        except FileNotFoundError:
+            pass
         # bash handles writing stdout+stderr to the log file via shell redirection.
         # Do NOT pass stdout= here — flatpak-spawn uses D-Bus, not a real pipe fd.
         self.__proc = subprocess.Popen(argv)
