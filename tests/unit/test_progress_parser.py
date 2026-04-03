@@ -12,7 +12,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from tuna_installer.utils.progress_parser import apply_progress_event, new_progress_state
+from bootc_installer.utils.progress_parser import apply_progress_event, new_progress_state
 
 
 def _step(step=1, total=8, name="Partitioning disk", cumulative_pct=0, weight_pct=1):

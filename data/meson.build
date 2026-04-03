@@ -19,13 +19,13 @@ install_data(
 )
 
 install_data(
-    'org.tunaos.Installer.policy',
+    'org.bootcinstaller.Installer.policy',
     install_dir: join_paths(get_option('datadir'), 'polkit-1', 'actions')
 )
 
 desktop_file = i18n.merge_file(
-  input: 'org.tunaos.Installer.desktop.in',
-  output: 'org.tunaos.Installer.desktop',
+  input: 'org.bootcinstaller.Installer.desktop.in',
+  output: 'org.bootcinstaller.Installer.desktop',
   type: 'desktop',
   po_dir: '../po',
   install: true,
@@ -40,8 +40,8 @@ if desktop_utils.found()
 endif
 
 appstream_file = i18n.merge_file(
-  input: 'org.tunaos.Installer.appdata.xml.in',
-  output: 'org.tunaos.Installer.appdata.xml',
+  input: 'org.bootcinstaller.Installer.appdata.xml.in',
+  output: 'org.bootcinstaller.Installer.appdata.xml',
   po_dir: '../po',
   install: true,
   install_dir: join_paths(get_option('datadir'), 'appdata')
@@ -54,7 +54,7 @@ if appstream_util.found()
   )
 endif
 
-install_data('org.tunaos.Installer.gschema.xml',
+install_data('org.bootcinstaller.Installer.gschema.xml',
   install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas')
 )
 
@@ -66,11 +66,11 @@ if compile_schemas.found()
 endif
 
 install_data('../recipe.json',
-  install_dir: join_paths(get_option('datadir'), 'tuna-installer')
+  install_dir: join_paths(get_option('datadir'), 'bootc-installer')
 )
 
 install_data('../fisherman/data/images.json',
-  install_dir: join_paths(get_option('datadir'), 'tuna-installer')
+  install_dir: join_paths(get_option('datadir'), 'bootc-installer')
 )
 
 subdir('icons')

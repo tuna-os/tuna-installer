@@ -28,11 +28,11 @@ repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 _SYS_RECIPE = {
     "log_file": "/dev/null",
     "distro_name": "TunaOS Test",
-    "distro_logo": "org.tunaos.Installer",
+    "distro_logo": "org.bootcinstaller.Installer",
     "tour": {
-        "welcome": {"resource": "/org/tunaos/Installer/assets/welcome.png",
+        "welcome": {"resource": "/org/bootcinstaller/Installer/assets/welcome.png",
                     "title": "Installing", "description": "test"},
-        "completed": {"resource": "/org/tunaos/Installer/assets/complete.svg",
+        "completed": {"resource": "/org/bootcinstaller/Installer/assets/complete.svg",
                       "title": "Done", "description": "test"},
     },
     "steps": {
@@ -63,7 +63,7 @@ def window():
     GTK-CRITICAL "windows must be added after startup" is a soft warning;
     the window is still fully functional for tests.
     """
-    from tuna_installer.windows.main_window import VanillaWindow
+    from bootc_installer.windows.main_window import VanillaWindow
 
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".json", delete=False
@@ -75,7 +75,7 @@ def window():
     os.environ["VANILLA_CUSTOM_RECIPE"] = recipe_path
     try:
         app = Adw.Application(
-            application_id="org.tunaos.InstallerTest",
+            application_id="org.bootcinstaller.InstallerTest",
             flags=Gio.ApplicationFlags.NON_UNIQUE,
         )
         win = VanillaWindow(application=app)
@@ -103,7 +103,7 @@ class TestWindowSmoke:
 
     def test_window_has_steps(self, window):
         """The builder should have registered at least the welcome step."""
-        from tuna_installer.utils.builder import Builder
+        from bootc_installer.utils.builder import Builder
         # The window exposes the builder via .builder property.
         assert hasattr(window, "builder") or hasattr(window, "_VanillaWindow__builder")
 
@@ -168,7 +168,7 @@ class TestWizardNavigation:
 class TestEndToEnd:
     def test_recipe_generated_from_auto_disk(self, window):
         """Simulate auto-disk selection and verify processor produces valid JSON."""
-        from tuna_installer.utils.processor import Processor
+        from bootc_installer.utils.processor import Processor
 
         # Build a finals list that mimics what the wizard collects.
         image_finals = window.image_step.get_finals()
@@ -195,7 +195,7 @@ class TestEndToEnd:
 
     def test_recipe_generated_from_manual_disk(self, window):
         """Manual partition layout produces customMounts in the recipe."""
-        from tuna_installer.utils.processor import Processor
+        from bootc_installer.utils.processor import Processor
 
         image_finals = window.image_step.get_finals()
         disk_finals = {
@@ -221,7 +221,7 @@ class TestEndToEnd:
 
     def test_composefs_propagates_end_to_end(self, window):
         """composefs_backend=True in image finals → composeFsBackend in recipe."""
-        from tuna_installer.utils.processor import Processor
+        from bootc_installer.utils.processor import Processor
 
         # Manually set composefs flag (as if a composefs-native image was selected).
         image_finals = window.image_step.get_finals()
@@ -240,7 +240,7 @@ class TestEndToEnd:
         assert recipe["composeFsBackend"] is True
 
     def test_encryption_propagates_end_to_end(self, window):
-        from tuna_installer.utils.processor import Processor
+        from bootc_installer.utils.processor import Processor
 
         image_finals = window.image_step.get_finals()
         disk_finals = {"disk": {"auto": {"disk": "/dev/vda"}}}

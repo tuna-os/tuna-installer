@@ -1,4 +1,4 @@
-"""Test that every .py file in each tuna_installer subpackage is listed in
+"""Test that every .py file in each bootc_installer subpackage is listed in
 its meson.build sources array.
 
 This catches the class of bug where a new .py file is added but forgotten
@@ -15,7 +15,7 @@ import pytest
 
 # Repo root is three levels up from tests/unit/
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PKG_ROOT = _REPO_ROOT / "tuna_installer"
+_PKG_ROOT = _REPO_ROOT / "bootc_installer"
 
 
 def _meson_sources(meson_build_path: Path) -> set[str]:

@@ -64,7 +64,7 @@ jobs:
             -Dbuild-fisherman=false \
             --prefix=/tmp/tuna-install
           ninja -C build
-          RESOURCE=$(find build -name "tuna-installer.gresource" | head -1)
+          RESOURCE=$(find build -name "bootc-installer.gresource" | head -1)
           echo "TUNA_RESOURCE=${RESOURCE}" >> $GITHUB_ENV
           echo "GResource built at: ${RESOURCE}"
 

@@ -17,7 +17,7 @@ def _mock_gtk_imports():
         "gi", "gi.repository", "gi.repository.Gdk", "gi.repository.Gio",
         "gi.repository.GLib", "gi.repository.Gtk", "gi.repository.Adw",
         "gi.repository.Pango", "gi.repository.GdkPixbuf",
-        "tuna_installer.views.tour", "tuna_installer.utils.run_async",
+        "bootc_installer.views.tour", "bootc_installer.utils.run_async",
     ]:
         mocks[name] = MagicMock()
     # gi.require_version must be a callable no-op
@@ -34,7 +34,7 @@ class TestFishermanArgvDirect(unittest.TestCase):
     def setUpClass(cls):
         with patch.dict("sys.modules", _mock_gtk_imports()):
             import importlib
-            import tuna_installer.views.progress as mod
+            import bootc_installer.views.progress as mod
             # Force a fresh load with mocked GTK in case cached without mocks
             if not hasattr(mod, "_fisherman_argv_direct"):
                 importlib.reload(mod)

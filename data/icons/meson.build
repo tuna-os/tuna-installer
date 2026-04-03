@@ -1,4 +1,4 @@
-application_id = 'org.tunaos.Installer'
+application_id = 'org.bootcinstaller.Installer'
 
 
 scalable_dir = join_paths('hicolor', 'scalable', 'apps')

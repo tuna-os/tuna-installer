@@ -1,15 +1,15 @@
 {
-    "log_file": "/var/log/tuna-installer.log",
+    "log_file": "/var/log/bootc-installer.log",
     "distro_name": "TunaOS",
-    "distro_logo": "org.tunaos.Installer",
+    "distro_logo": "org.bootcinstaller.Installer",
     "tour": {
         "welcome": {
-            "resource": "/org/tunaos/Installer/assets/welcome.png",
+            "resource": "/org/bootcinstaller/Installer/assets/welcome.png",
             "title": "Installing TunaOS",
             "description": "The process could take a few minutes, please be patient"
         },
         "completed": {
-            "resource": "/org/tunaos/Installer/assets/complete.svg",
+            "resource": "/org/bootcinstaller/Installer/assets/complete.svg",
             "title": "Installation Complete",
             "description": "Your system is ready to use"
         }

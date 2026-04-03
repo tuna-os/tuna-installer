@@ -8,7 +8,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from tuna_installer.utils.processor import Processor
+from bootc_installer.utils.processor import Processor
 
 # A minimal system recipe (the tuna recipe.json, NOT the fisherman recipe).
 _SYS_RECIPE = {}

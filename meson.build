@@ -1,4 +1,4 @@
-project('org.tunaos.Installer',
+project('org.bootcinstaller.Installer',
           version: '0.1.0',
     meson_version: '>= 0.59.0',
   default_options: [ 'warning_level=2',
@@ -14,7 +14,7 @@ subdir('data')
 if get_option('build-fisherman')
   subdir('fisherman')
 endif
-subdir('tuna_installer')
+subdir('bootc_installer')
 subdir('po')
 
 gnome.post_install(
