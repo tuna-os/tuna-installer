@@ -134,22 +134,11 @@ def apply_progress_event(line: str, state: dict) -> dict | None:
 
 
 def _fisherman_argv_direct(recipe: str) -> list:
-    """Build argv to run fisherman directly (no bash wrapper, no tee)."""
-    if _IN_FLATPAK:
-        if os.environ.get("TUNA_TEST"):
-            bin_ = os.environ.get("TUNA_FISHERMAN_PATH", _FISHERMAN_HOST_PATH)
-            return ["flatpak-spawn", "--host", "sudo", bin_, recipe]
-        return ["flatpak-spawn", "--host", "pkexec", _FISHERMAN_HOST_PATH, recipe]
-    elif _LIVE_ISO:
-        return ["sudo", "/usr/local/bin/fisherman", recipe]
-    else:
-        return ["pkexec", "/usr/local/bin/fisherman", recipe]
+    """Build a bash argv that redirects fisherman stdout+stderr into the log file.
 
-
-def _fisherman_argv(recipe: str) -> list:
-    """Build the VTE argv that runs fisherman and tees combined output to a log file.
-
-    bash is used so PIPESTATUS preserves fisherman's exit code through the tee pipe.
+    flatpak-spawn --host communicates over D-Bus, so subprocess.Popen stdout
+    redirection doesn't work. We run bash *inside* the sandbox instead, which
+    supports normal shell redirection to write the log file.
     """
     log = _FISHERMAN_LOG_PATH
     if _IN_FLATPAK:
@@ -165,7 +154,7 @@ def _fisherman_argv(recipe: str) -> list:
 
     return [
         "bash", "-c",
-        f'{runner} "$1" 2>&1 | tee "{log}"; exit "${{PIPESTATUS[0]}}"',
+        f'{runner} "$1" >"{log}" 2>&1; exit $?',
         "--", recipe,
     ]
 
@@ -361,10 +350,6 @@ class VanillaProgress(Gtk.Box):
         ret = self.__proc.poll()
         if ret is None:
             return True  # still running
-        if self.__log_out:
-            self.__log_out.flush()
-            self.__log_out.close()
-            self.__log_out = None
         # Give the log poller 300ms to drain any last bytes before finishing.
         GLib.timeout_add(300, self.__finish_install, ret)
         return False
@@ -418,12 +403,9 @@ class VanillaProgress(Gtk.Box):
 
         argv = _fisherman_argv_direct(recipe)
         os.makedirs(_FISHERMAN_CACHE_DIR, exist_ok=True)
-        self.__log_out = open(_FISHERMAN_LOG_PATH, "w", buffering=1)
-        self.__proc = subprocess.Popen(
-            argv,
-            stdout=self.__log_out,
-            stderr=subprocess.STDOUT,
-        )
+        # bash handles writing stdout+stderr to the log file via shell redirection.
+        # Do NOT pass stdout= here — flatpak-spawn uses D-Bus, not a real pipe fd.
+        self.__proc = subprocess.Popen(argv)
         GLib.timeout_add(500, self.__poll_proc)
         self._start_log_watcher()
 
