@@ -134,29 +134,25 @@ def apply_progress_event(line: str, state: dict) -> dict | None:
 
 
 def _fisherman_argv_direct(recipe: str) -> list:
-    """Build a bash argv that redirects fisherman stdout+stderr into the log file.
+    """Build an argv that captures fisherman stdout+stderr into the log file.
 
-    flatpak-spawn --host communicates over D-Bus, so subprocess.Popen stdout
-    redirection doesn't work. We run bash *inside* the sandbox instead, which
-    supports normal shell redirection to write the log file.
+    For Flatpak: run bash on the HOST via flatpak-spawn so the shell redirect
+    happens where fisherman actually runs. If we redirect inside the sandbox,
+    flatpak-spawn's D-Bus proxy doesn't forward the host process stdout back
+    through the redirect — the log file stays empty even though fisherman runs.
     """
     log = _FISHERMAN_LOG_PATH
     if _IN_FLATPAK:
         if os.environ.get("TUNA_TEST"):
             bin_ = os.environ.get("TUNA_FISHERMAN_PATH", _FISHERMAN_HOST_PATH)
-            runner = f"flatpak-spawn --host sudo {bin_}"
+            cmd = f'sudo "{bin_}" "$1" >"{log}" 2>&1; exit $?'
         else:
-            runner = f"flatpak-spawn --host pkexec {_FISHERMAN_HOST_PATH}"
+            cmd = f'pkexec "{_FISHERMAN_HOST_PATH}" "$1" >"{log}" 2>&1; exit $?'
+        return ["flatpak-spawn", "--host", "bash", "-c", cmd, "--", recipe]
     elif _LIVE_ISO:
-        runner = "sudo /usr/local/bin/fisherman"
+        return ["bash", "-c", f'sudo /usr/local/bin/fisherman "$1" >"{log}" 2>&1; exit $?', "--", recipe]
     else:
-        runner = "pkexec /usr/local/bin/fisherman"
-
-    return [
-        "bash", "-c",
-        f'{runner} "$1" >"{log}" 2>&1; exit $?',
-        "--", recipe,
-    ]
+        return ["bash", "-c", f'pkexec /usr/local/bin/fisherman "$1" >"{log}" 2>&1; exit $?', "--", recipe]
 
 
 def _stage_fisherman_on_host() -> bool:

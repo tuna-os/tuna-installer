@@ -26,9 +26,12 @@ def _mock_gtk_imports():
 
 
 class TestFishermanArgvDirect(unittest.TestCase):
-    """_fisherman_argv_direct must return a bash wrapper that shell-redirects
-    fisherman stdout+stderr into the log file. flatpak-spawn uses D-Bus so
-    subprocess.Popen(stdout=fd) never receives data; bash redirection works."""
+    """_fisherman_argv_direct must return an argv that shell-redirects fisherman
+    stdout+stderr into the log file on the host.
+
+    Flatpak case: bash runs on the HOST via flatpak-spawn so the redirect
+    happens where fisherman runs — not through the D-Bus proxy.
+    """
 
     @classmethod
     def setUpClass(cls):
@@ -45,13 +48,16 @@ class TestFishermanArgvDirect(unittest.TestCase):
         self.mod._LIVE_ISO = live_iso
         return self.mod._fisherman_argv_direct
 
-    def test_returns_bash_wrapper(self):
+    def _script(self, argv: list) -> str:
+        """Return the shell script string from an argv (element after '-c')."""
+        idx = argv.index("-c")
+        return argv[idx + 1]
+
+    def test_returns_list_of_strings(self):
         fn = self._fn(False, False)
         argv = fn("/tmp/recipe.json")
         self.assertIsInstance(argv, list)
         self.assertTrue(all(isinstance(a, str) for a in argv))
-        self.assertEqual(argv[0], "bash")
-        self.assertEqual(argv[1], "-c")
 
     def test_recipe_is_last_arg(self):
         """The recipe path is always the last element (bash positional $1)."""
@@ -59,30 +65,38 @@ class TestFishermanArgvDirect(unittest.TestCase):
         argv = fn("/tmp/recipe.json")
         self.assertEqual(argv[-1], "/tmp/recipe.json")
 
-    def test_flatpak_normal(self):
+    def test_flatpak_normal_runs_bash_on_host(self):
+        """Flatpak: bash must run on the HOST so the log redirect works."""
         fn = self._fn(in_flatpak=True, live_iso=False)
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("TUNA_TEST", None)
             argv = fn("/tmp/recipe.json")
-        script = argv[2]
-        self.assertIn("flatpak-spawn", script)
+        self.assertEqual(argv[0], "flatpak-spawn")
+        self.assertIn("--host", argv)
+        self.assertIn("bash", argv)
+        script = self._script(argv)
         self.assertIn("pkexec", script)
+        self.assertNotIn("flatpak-spawn", script)
         self.assertEqual(argv[-1], "/tmp/recipe.json")
 
     def test_flatpak_tuna_test(self):
+        """TUNA_TEST env: uses sudo with custom fisherman path on the host."""
         fn = self._fn(in_flatpak=True, live_iso=False)
         with patch.dict(os.environ, {"TUNA_TEST": "1", "TUNA_FISHERMAN_PATH": "/custom/fisherman"}):
             argv = fn("/tmp/recipe.json")
-        script = argv[2]
-        self.assertIn("flatpak-spawn", script)
+        self.assertEqual(argv[0], "flatpak-spawn")
+        self.assertIn("--host", argv)
+        script = self._script(argv)
         self.assertIn("sudo", script)
         self.assertIn("/custom/fisherman", script)
+        self.assertNotIn("flatpak-spawn", script)
         self.assertEqual(argv[-1], "/tmp/recipe.json")
 
     def test_live_iso(self):
         fn = self._fn(in_flatpak=False, live_iso=True)
         argv = fn("/tmp/recipe.json")
-        script = argv[2]
+        self.assertEqual(argv[0], "bash")
+        script = self._script(argv)
         self.assertIn("sudo", script)
         self.assertIn("/usr/local/bin/fisherman", script)
         self.assertEqual(argv[-1], "/tmp/recipe.json")
@@ -90,16 +104,17 @@ class TestFishermanArgvDirect(unittest.TestCase):
     def test_native(self):
         fn = self._fn(in_flatpak=False, live_iso=False)
         argv = fn("/tmp/recipe.json")
-        script = argv[2]
+        self.assertEqual(argv[0], "bash")
+        script = self._script(argv)
         self.assertIn("pkexec", script)
         self.assertIn("/usr/local/bin/fisherman", script)
         self.assertEqual(argv[-1], "/tmp/recipe.json")
 
     def test_log_file_redirected_in_script(self):
-        """The bash script must redirect output to the log file, not stdout."""
+        """The shell script must redirect output to the log file."""
         fn = self._fn(False, False)
         argv = fn("/tmp/recipe.json")
-        script = argv[2]
+        script = self._script(argv)
         self.assertIn(">", script)
         self.assertIn(self.mod._FISHERMAN_LOG_PATH, script)
 

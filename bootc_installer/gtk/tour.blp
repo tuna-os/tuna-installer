@@ -7,23 +7,19 @@ template $VanillaTour: Adw.Bin {
   hexpand: true;
   vexpand: true;
 
-  ScrolledWindow {
-    hscrollbar-policy: never;
+  Box {
+    orientation: vertical;
     vexpand: true;
     hexpand: true;
 
-    Adw.PreferencesPage {
-      Adw.PreferencesGroup {
-        $TunaPageHeader page_header {
-          margin-top: 24;
-        }
-      }
+    $TunaPageHeader page_header {
+      margin-top: 24;
+      margin-bottom: 12;
+    }
 
-      Adw.PreferencesGroup {
-        Picture assets_svg {
-          can-shrink: false;
-        }
-      }
+    Picture assets_svg {
+      can-shrink: true;
+      vexpand: true;
     }
   }
 }
