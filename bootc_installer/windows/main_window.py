@@ -294,7 +294,7 @@ class VanillaWindow(Adw.ApplicationWindow):
             logger.info(f"Already on last page ({int(cur_index)}), ignoring next()")
             return
         page = self.carousel.get_nth_page(cur_index)
-        if page.delta:
+        if getattr(page, "delta", False):
             logger.info(f"Removing deltas of page {int(cur_index)}")
             page.del_deltas()
         logger.info(f"Next page is {int(cur_index + 1)}")
@@ -306,7 +306,7 @@ class VanillaWindow(Adw.ApplicationWindow):
 
         page = self.carousel.get_nth_page(cur_index + 1)
         self.carousel.scroll_to(page, True)
-        if page.delta:
+        if getattr(page, "delta", False):
             logger.info(f"Generating deltas of page {int(cur_index + 1)}")
             page.gen_deltas()
 
@@ -315,13 +315,13 @@ class VanillaWindow(Adw.ApplicationWindow):
 
         cur_index = self.carousel.get_position()
         page = self.carousel.get_nth_page(cur_index)
-        if page.delta:
+        if getattr(page, "delta", False):
             page.del_deltas()
         logger.info(f"Previous page is {int(cur_index - 1)}")
 
         page = self.carousel.get_nth_page(cur_index - 1)
         self.carousel.scroll_to(page, True)
-        if page.delta:
+        if getattr(page, "delta", False):
             page.gen_deltas()
 
     def toast(self, message, timeout=3):

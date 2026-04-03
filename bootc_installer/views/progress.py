@@ -300,17 +300,21 @@ class VanillaProgress(Gtk.Box):
         GLib.io_add_watch does not work on regular files (only pipes/sockets),
         so we use a timer-based poll instead.
         """
+        self.__watcher_lines = 0
+        logger.info("_start_log_watcher: scheduling try_open for %s", _FISHERMAN_LOG_PATH)
         GLib.timeout_add(200, self.__try_open_log_for_watching)
 
     def __try_open_log_for_watching(self) -> bool:
-        if not os.path.exists(_FISHERMAN_LOG_PATH):
+        exists = os.path.exists(_FISHERMAN_LOG_PATH)
+        if not exists:
             return True  # retry
         try:
             self.__log_file = open(_FISHERMAN_LOG_PATH, "r")
             GLib.timeout_add(100, self.__poll_log_file)
-            logger.info("Log watcher started on %s", _FISHERMAN_LOG_PATH)
+            logger.info("Log watcher OPENED %s (pos=%d)", _FISHERMAN_LOG_PATH, self.__log_file.tell())
             return False  # stop retrying
-        except OSError:
+        except OSError as e:
+            logger.error("Log watcher open FAILED: %s", e)
             return True  # retry
 
     def __poll_log_file(self) -> bool:
@@ -323,8 +327,12 @@ class VanillaProgress(Gtk.Box):
             lines = self.__log_linebuf.split("\n")
             self.__log_linebuf = lines[-1]
             for line in lines[:-1]:
+                self.__watcher_lines += 1
                 self.__parse_progress_line(line.strip())
                 self.__append_log_line(line)
+            if self.__watcher_lines <= 5 or self.__watcher_lines % 50 == 0:
+                logger.info("Log watcher: %d lines appended to buffer (buf chars=%d)",
+                            self.__watcher_lines, self.__log_buf.get_char_count())
         return True  # keep polling until __finish_install sets __log_file = None
 
     def __append_log_line(self, line: str):
@@ -405,11 +413,18 @@ class VanillaProgress(Gtk.Box):
         # causing read() to return empty even though new content is present.
         try:
             os.unlink(_FISHERMAN_LOG_PATH)
+            logger.info("Deleted stale log file: %s", _FISHERMAN_LOG_PATH)
         except FileNotFoundError:
-            pass
+            logger.info("No stale log file to delete")
+        except Exception as e:
+            logger.error("Failed to delete stale log: %s", e)
+        logger.info("Launching fisherman: %s", argv)
         # bash handles writing stdout+stderr to the log file via shell redirection.
         # Do NOT pass stdout= here — flatpak-spawn uses D-Bus, not a real pipe fd.
         self.__proc = subprocess.Popen(argv)
+        logger.info("Fisherman PID: %s", self.__proc.pid)
+        GLib.timeout_add(500, self.__poll_proc)
+        self._start_log_watcher()
         GLib.timeout_add(500, self.__poll_proc)
         self._start_log_watcher()
 
