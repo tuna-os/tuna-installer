@@ -30,18 +30,18 @@ localedir = '@localedir@'
 
 sys.path.insert(1, pkgdatadir)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-locale.bindtextdomain('tuna_installer', localedir)
-locale.textdomain('tuna_installer')
-gettext.install('tuna_installer', localedir)
+locale.bindtextdomain('bootc_installer', localedir)
+locale.textdomain('bootc_installer')
+gettext.install('bootc_installer', localedir)
 
 if __name__ == '__main__':
     import gi
         
     from gi.repository import Gio
-    resource = Gio.Resource.load(os.path.join(pkgdatadir, 'tuna-installer.gresource'))
+    resource = Gio.Resource.load(os.path.join(pkgdatadir, 'bootc-installer.gresource'))
     resource._register()
 
-    from tuna_installer import main
+    from bootc_installer import main
 
     '''
     Since gtk_window_set_position in GTK4 is deprecated
@@ -60,7 +60,7 @@ if __name__ == '__main__':
             time.sleep(3)
             settings.set_boolean('center-new-windows', False)
 
-        from tuna_installer.utils.run_async import RunAsync
+        from bootc_installer.utils.run_async import RunAsync
 
         RunAsync(restore_mutter_settings, None)
     sys.exit(main.main(VERSION))
