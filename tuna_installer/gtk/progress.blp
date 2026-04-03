@@ -6,6 +6,7 @@ template $VanillaProgress: Box {
 
   Box tour_box {
     visible: true;
+    vexpand: true;
     margin-start: 40;
     margin-end: 40;
     margin-top: 1;
@@ -14,7 +15,7 @@ template $VanillaProgress: Box {
     orientation: vertical;
 
     Overlay {
-      valign: center;
+      vexpand: true;
 
       [overlay]
       Button tour_btn_back {
@@ -72,6 +73,7 @@ template $VanillaProgress: Box {
 
   Box console_box {
     visible: false;
+    vexpand: true;
     margin-start: 40;
     margin-end: 40;
     margin-top: 1;
