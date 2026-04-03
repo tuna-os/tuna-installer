@@ -79,12 +79,25 @@ template $VanillaProgress: Box {
     height-request: 550;
     orientation: vertical;
 
-    Box console_output {
-      visible: true;
+    ScrolledWindow {
+      vexpand: true;
+      hexpand: true;
       margin-top: 12;
       margin-start: 12;
       margin-end: 12;
-      orientation: vertical;
+      margin-bottom: 12;
+
+      TextView log_view {
+        editable: false;
+        monospace: true;
+        wrap-mode: word_char;
+        top-margin: 8;
+        bottom-margin: 8;
+        left-margin: 8;
+        right-margin: 8;
+
+        styles ["log-view"]
+      }
     }
 
     styles [

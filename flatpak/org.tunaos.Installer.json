@@ -1,133 +1,113 @@
 {
-    "app-id": "org.tunaos.Installer",
-    "runtime": "org.gnome.Platform",
-    "runtime-version": "50",
-    "sdk": "org.gnome.Sdk",
-    "command": "tuna-installer",
-    "finish-args": [
-        "--share=network",
-        "--share=ipc",
-        "--socket=wayland",
-        "--socket=fallback-x11",
-        "--device=all",
-        "--filesystem=host",
-        "--talk-name=org.freedesktop.Flatpak",
-        "--system-talk-name=org.freedesktop.login1",
-        "--system-talk-name=org.freedesktop.PolicyKit1",
-        "--allow=devel"
-    ],
-    "build-options": {
-        "env": {
-            "PATH": "/app/go/bin:/usr/bin:/bin",
-            "GOPATH": "/run/build/go-path",
-            "GOCACHE": "/run/build/go-cache",
-            "GONOSUMDB": "*",
-            "GOFLAGS": "",
-            "GOPROXY": "off"
+  "app-id": "org.tunaos.Installer",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "50",
+  "sdk": "org.gnome.Sdk",
+  "command": "tuna-installer",
+  "finish-args": [
+    "--share=network",
+    "--share=ipc",
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--device=all",
+    "--filesystem=host",
+    "--talk-name=org.freedesktop.Flatpak",
+    "--system-talk-name=org.freedesktop.login1",
+    "--system-talk-name=org.freedesktop.PolicyKit1",
+    "--allow=devel"
+  ],
+  "build-options": {
+    "env": {
+      "PATH": "/app/go/bin:/usr/bin:/bin",
+      "GOPATH": "/run/build/go-path",
+      "GOCACHE": "/run/build/go-cache",
+      "GONOSUMDB": "*",
+      "GOFLAGS": "",
+      "GOPROXY": "off"
+    }
+  },
+  "modules": [
+    {
+      "name": "mutter-schemas",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm644 org.gnome.mutter.gschema.xml /app/share/glib-2.0/schemas/org.gnome.mutter.gschema.xml",
+        "glib-compile-schemas /app/share/glib-2.0/schemas/"
+      ],
+      "sources": [
+        {
+          "type": "file",
+          "path": "org.gnome.mutter.gschema.xml"
         }
+      ]
     },
-    "modules": [
+    {
+      "name": "go",
+      "buildsystem": "simple",
+      "build-commands": [
+        "cp -r go /app/go"
+      ],
+      "sources": [
         {
-            "name": "mutter-schemas",
-            "buildsystem": "simple",
-            "build-commands": [
-                "install -Dm644 org.gnome.mutter.gschema.xml /app/share/glib-2.0/schemas/org.gnome.mutter.gschema.xml",
-                "glib-compile-schemas /app/share/glib-2.0/schemas/"
-            ],
-            "sources": [
-                {
-                    "type": "file",
-                    "path": "org.gnome.mutter.gschema.xml"
-                }
-            ]
-        },
-        {
-            "name": "go",
-            "buildsystem": "simple",
-            "build-commands": [
-                "cp -r go /app/go"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://go.dev/dl/go1.26.1.linux-amd64.tar.gz",
-                    "sha256": "031f088e5d955bab8657ede27ad4e3bc5b7c1ba281f05f245bcc304f327c987a",
-                    "strip-components": 0
-                }
-            ]
-        },
-        {
-            "name": "vte",
-            "buildsystem": "meson",
-            "config-opts": [
-                "-Dgtk4=true",
-                "-Dgtk3=false",
-                "-Dvapi=false",
-                "-Ddocs=false",
-                "-D_systemd=false",
-                "-Dgir=true",
-                "-Dfribidi=false"
-            ],
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://gitlab.gnome.org/GNOME/vte.git",
-                    "tag": "0.78.0"
-                }
-            ]
-        },
-        {
-            "name": "fisherman",
-            "buildsystem": "simple",
-            "build-commands": [
-                "go build -C fisherman -o /app/bin/fisherman ./cmd/fisherman"
-            ],
-            "sources": [
-                {
-                    "type": "dir",
-                    "path": "../fisherman"
-                }
-            ]
-        },
-        {
-            "name": "blueprint-compiler",
-            "buildsystem": "meson",
-            "cleanup": [
-                "*"
-            ],
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://gitlab.gnome.org/GNOME/blueprint-compiler.git",
-                    "tag": "v0.14.0"
-                }
-            ]
-        },
-        {
-            "name": "tuna-installer",
-            "buildsystem": "meson",
-            "config-opts": [
-                "-Dbuild-fisherman=false"
-            ],
-            "sources": [
-                {
-                    "type": "dir",
-                    "path": ".."
-                }
-            ]
-        },
-        {
-            "name": "polkit-action",
-            "buildsystem": "simple",
-            "build-commands": [
-                "install -Dm644 data/polkit/org.tunaos.Installer.policy /app/share/polkit-1/actions/org.tunaos.Installer.policy"
-            ],
-            "sources": [
-                {
-                    "type": "dir",
-                    "path": ".."
-                }
-            ]
+          "type": "archive",
+          "url": "https://go.dev/dl/go1.26.1.linux-amd64.tar.gz",
+          "sha256": "031f088e5d955bab8657ede27ad4e3bc5b7c1ba281f05f245bcc304f327c987a",
+          "strip-components": 0
         }
-    ]
+      ]
+    },
+    {
+      "name": "fisherman",
+      "buildsystem": "simple",
+      "build-commands": [
+        "go build -C fisherman -o /app/bin/fisherman ./cmd/fisherman"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "../fisherman"
+        }
+      ]
+    },
+    {
+      "name": "blueprint-compiler",
+      "buildsystem": "meson",
+      "cleanup": [
+        "*"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://gitlab.gnome.org/GNOME/blueprint-compiler.git",
+          "tag": "v0.14.0"
+        }
+      ]
+    },
+    {
+      "name": "tuna-installer",
+      "buildsystem": "meson",
+      "config-opts": [
+        "-Dbuild-fisherman=false"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": ".."
+        }
+      ]
+    },
+    {
+      "name": "polkit-action",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm644 data/polkit/org.tunaos.Installer.policy /app/share/polkit-1/actions/org.tunaos.Installer.policy"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": ".."
+        }
+      ]
+    }
+  ]
 }

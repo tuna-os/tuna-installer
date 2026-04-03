@@ -35,7 +35,6 @@ logger_boot.info("gi imported")
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-gi.require_version("Vte", "3.91")
 logger_boot.info("gi.require_version done")
 
 from gi.repository import Adw, Gio
