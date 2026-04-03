@@ -100,7 +100,7 @@ def _load_manifest():
 
 _MANIFEST = _load_manifest()
 _IMAGE_TREE = _MANIFEST["images"]
-_DEFAULT_IMAGE = _MANIFEST["default_image"]
+_DEFAULT_IMAGE = _MANIFEST.get("default_image", "")
 _FALLBACK_FLATPAKS = _MANIFEST["fallback_flatpaks"]
 _APP_NAME = _MANIFEST.get("app_name", "bootc Installer")
 
@@ -349,8 +349,7 @@ class VanillaDefaultImage(Adw.Bin):
                 for exp in ancestors:
                     exp.set_expanded(True)
                 return
-        if self.__leaf_rows:
-            self.__leaf_rows[0][1].set_active(True)
+        # No default image — leave everything collapsed, nothing pre-selected.
 
     # ── Selection handlers ────────────────────────────────────────────────────
 
@@ -431,8 +430,7 @@ class VanillaDefaultImage(Adw.Bin):
                 for exp in ancestors:
                     exp.set_expanded(True)
                 return
-        if self.__all_expanders:
-            self.__all_expanders[0].set_expanded(True)
+        # No default image — leave everything collapsed.
 
     # ── Sensitivity ───────────────────────────────────────────────────────────
 
