@@ -58,17 +58,30 @@ class RecipeLoader:
         """Post-load enrichment: detect live ISO mode and inject local bootc image."""
         in_flatpak = os.path.exists("/.flatpak-info")
         is_ostree_booted = os.path.exists("/run/ostree-booted")
-        live_iso_mode = not in_flatpak and is_ostree_booted
+        # Also detect squashfs-based live ISOs (dracut dmsquash-live) which do not
+        # set /run/ostree-booted because they are not ostree deployments.
+        is_live_squashfs = os.path.exists("/run/initramfs/live")
+        live_iso_mode = not in_flatpak and (is_ostree_booted or is_live_squashfs)
 
         if live_iso_mode:
-            imgref = self.__recipe.get("imgref", "") or self.__detect_local_bootc_image()
-            if imgref:
-                logger.info(f"Live ISO mode: using local bootc image {imgref}")
-                self.__recipe["imgref"] = imgref
+            # local_imgref is an optional override for the install *source* used only
+            # in live ISO mode (e.g. "containers-storage:ghcr.io/org/image:tag" for
+            # offline installs from a pre-populated squashfs).  imgref always remains
+            # the remote tracking reference written into the installed system.
+            if not self.__recipe.get("local_imgref"):
+                imgref = self.__recipe.get("imgref", "") or self.__detect_local_bootc_image()
+                if imgref:
+                    logger.info(f"Live ISO mode: using local bootc image {imgref}")
+                    self.__recipe["imgref"] = imgref
+                else:
+                    logger.warning("Live ISO mode: could not detect local bootc image")
             else:
-                logger.warning("Live ISO mode: could not detect local bootc image")
+                logger.info(
+                    f"Live ISO mode: local_imgref override present "
+                    f"({self.__recipe['local_imgref']}), imgref stays as remote tracking ref"
+                )
 
-            # Remove the image selection step — use the local image silently
+            # Remove the image selection step — use the configured image silently
             self.__recipe["steps"].pop("image", None)
             logger.info("Live ISO mode: image selection step removed")
         else:

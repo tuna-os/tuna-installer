@@ -109,7 +109,8 @@ class Processor:
 
         # --- Image / OCI ref ---
         # In Flatpak mode: finals contain "selected_image" or "custom_image" from the UI.
-        # In live ISO mode: the image step is skipped; recipe["imgref"] holds the local image.
+        # In live ISO mode: the image step is skipped; recipe["imgref"] holds the remote
+        # tracking ref and optional "local_imgref" holds the install source override.
         image = merged.get("custom_image", "") or merged.get("selected_image", "")
         if not image:
             image = sys_recipe.get("imgref", "")
@@ -124,7 +125,21 @@ class Processor:
         if not image:
             logger.warning("No image/imgref found in finals or sys_recipe!")
 
+        # target_imgref is always the remote registry reference written into the
+        # installed system so that bootc upgrade tracks the correct upstream image.
         target_imgref = image
+
+        # local_imgref (live ISO only) is an optional install *source* override — e.g.
+        # "containers-storage:ghcr.io/org/image:tag" for offline installs from a
+        # pre-populated squashfs.  It is passed to fisherman as --source-imgref while
+        # target_imgref (the remote ref) is passed as --target-imgref unchanged.
+        local_imgref = sys_recipe.get("local_imgref", "")
+        if local_imgref:
+            logger.info(
+                f"local_imgref override: install source={local_imgref}, "
+                f"installed system tracks={target_imgref}"
+            )
+            image = local_imgref
 
         # --- Hostname ---
         hostname = merged.get("hostname", sys_recipe.get("hostname", "tunaos"))
