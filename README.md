@@ -1,3 +1,14 @@
+# ⚠️ This repository has moved
+
+**bootc-installer now lives at [projectbluefin/bootc-installer](https://github.com/projectbluefin/bootc-installer)**
+
+Please update your remotes:
+
+```bash
+git remote set-url origin https://github.com/projectbluefin/bootc-installer.git
+```
+
+---
 <div align="center">
     <img src="data/icons/hicolor/scalable/apps/org.tunaos.Installer.svg" height="64">
     <h1>TunaOS Installer</h1>
